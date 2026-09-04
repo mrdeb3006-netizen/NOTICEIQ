@@ -166,6 +166,32 @@ export default function InstitutionRegisterPage() {
     }, 700);
   };
 
+  // Direct 1-Click Demo Bypass for MVP Evaluation
+  const handleDirectDemoSetup = () => {
+    const demoInstitution = {
+      id: "inst-future-college",
+      name: "Future Institute of Engineering and Management",
+      type: "college" as const,
+      location: "Kolkata, West Bengal",
+      website: "https://futurecollege.ac.in",
+      logo: "🏛️",
+      emailDomain: "@futurecollege.ac.in",
+      adminName: "Dr. Alok Verma",
+      adminEmail: "admin@futurecollege.ac.in",
+      adminPhone: "+91 98300 12345",
+      status: "active" as const,
+      createdAt: new Date().toISOString().split("T")[0],
+    };
+
+    try {
+      localStorage.setItem("noticeiq_institution", JSON.stringify(demoInstitution));
+    } catch (err) {
+      console.error(err);
+    }
+
+    router.push("/institution/dashboard");
+  };
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 py-10 relative overflow-hidden bg-[#090d16]">
       {/* Ambient background glow */}
@@ -189,6 +215,42 @@ export default function InstitutionRegisterPage() {
         <div className="glass-card-static rounded-3xl p-6 sm:p-10 relative border border-white/10 shadow-2xl">
           {/* Top specular rim light */}
           <div className="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none" />
+
+          {/* ========================================================================= */}
+          {/* MVP DISCLAIMER BANNER & DIRECT ACCESS                                     */}
+          {/* ========================================================================= */}
+          {currentStep !== 4 && (
+            <div className="mb-6 space-y-3">
+              <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-left text-xs space-y-1 shadow-xs">
+                <div className="flex items-center gap-2 text-amber-300 font-bold">
+                  <Info className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>NoticeIQ MVP Demo Mode</span>
+                </div>
+                <p className="text-slate-300 text-[11px] leading-relaxed">
+                  Full DNS record verification, domain authentication, and automated KYC will work properly in the main project. You can complete the 3-step form below or skip directly to the dashboard.
+                </p>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-indigo-900/30 border border-indigo-500/30 flex items-center justify-between text-left">
+                <div>
+                  <span className="text-xs font-bold text-white block">
+                    🚀 Instant Demo Workspace Setup
+                  </span>
+                  <span className="text-[10px] text-indigo-300">
+                    Pre-configures Future Institute workspace & jumps to Dashboard
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDirectDemoSetup}
+                  className="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/30 flex items-center gap-1 transition-all shrink-0 ml-2"
+                >
+                  <span>Skip to Dashboard</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {currentStep !== 4 && (
             <div className="mb-8">

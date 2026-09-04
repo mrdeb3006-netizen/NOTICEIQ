@@ -22,10 +22,12 @@ import {
   UserCheck,
   Send,
   Info,
+  Zap,
 } from "lucide-react";
 import { useStudentAuth } from "@/lib/studentStore";
 import { Institution } from "@/types/institution";
 import { StudentProfile } from "@/types/student";
+import { initialStudentProfiles } from "@/lib/mockData";
 
 export default function StudentLoginPage() {
   const router = useRouter();
@@ -40,7 +42,7 @@ export default function StudentLoginPage() {
   // College State
   const [collegeEmail, setCollegeEmail] = useState("debendra@futurecollege.ac.in");
   const [matchedCollege, setMatchedCollege] = useState<Institution | null>(null);
-  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const [otpDigits, setOtpDigits] = useState(["1", "2", "3", "4", "5", "6"]);
   const [verifiedCollegeStudent, setVerifiedCollegeStudent] = useState<StudentProfile | null>(null);
   const [isUnmatchedCollegeEmail, setIsUnmatchedCollegeEmail] = useState(false);
   const [requestAccessSent, setRequestAccessSent] = useState(false);
@@ -62,10 +64,23 @@ export default function StudentLoginPage() {
   const otpInputs = useRef<(HTMLInputElement | null)[]>([]);
 
   // ---------------------------------------------------------------------------
+  // DIRECT 1-CLICK DEMO ACCESS (MVP Fast Bypass)
+  // ---------------------------------------------------------------------------
+  const handleDirectAccess = (type: "college" | "school") => {
+    if (type === "college") {
+      const demoCollege = initialStudentProfiles[0]; // Debendra Bera
+      loginStudent(demoCollege);
+      router.push("/student/dashboard");
+    } else {
+      const demoSchool = initialStudentProfiles[1]; // Aarav Sen
+      loginStudent(demoSchool);
+      router.push("/student/dashboard");
+    }
+  };
+
+  // ---------------------------------------------------------------------------
   // COLLEGE FLOW HANDLERS
   // ---------------------------------------------------------------------------
-
-  // Step 1: Check Domain
   const handleCheckDomain = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -80,17 +95,15 @@ export default function StudentLoginPage() {
     setCollegeStep(2);
   };
 
-  // Step 2: Send OTP
   const handleSendOtp = () => {
     setIsSubmitting(true);
     setErrorMessage(null);
     setTimeout(() => {
       setIsSubmitting(false);
       setCollegeStep(3);
-    }, 500);
+    }, 400);
   };
 
-  // Step 3: Handle OTP input
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) {
       value = value.slice(-1);
@@ -99,7 +112,6 @@ export default function StudentLoginPage() {
     newDigits[index] = value;
     setOtpDigits(newDigits);
 
-    // Auto-focus next input
     if (value && index < 5) {
       otpInputs.current[index + 1]?.focus();
     }
@@ -111,7 +123,6 @@ export default function StudentLoginPage() {
     }
   };
 
-  // Verify OTP
   const handleVerifyOtp = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -141,7 +152,7 @@ export default function StudentLoginPage() {
         setIsUnmatchedCollegeEmail(true);
         setCollegeStep(4);
       }
-    }, 600);
+    }, 400);
   };
 
   // ---------------------------------------------------------------------------
@@ -168,10 +179,9 @@ export default function StudentLoginPage() {
       setVerifiedSchoolStudent(result.student);
       loginStudent(result.student);
       setSchoolStep(2);
-    }, 600);
+    }, 400);
   };
 
-  // Reset to Tab switch
   const switchMode = (mode: "college" | "school") => {
     setAuthMode(mode);
     setCollegeStep(1);
@@ -181,7 +191,7 @@ export default function StudentLoginPage() {
     setVerifiedSchoolStudent(null);
     setIsUnmatchedCollegeEmail(false);
     setRequestAccessSent(false);
-    setOtpDigits(["", "", "", "", "", ""]);
+    setOtpDigits(["1", "2", "3", "4", "5", "6"]);
   };
 
   return (
@@ -201,6 +211,62 @@ export default function StudentLoginPage() {
         </p>
       }
     >
+      {/* ========================================================================= */}
+      {/* MVP AUTHENTICATION DISCLAIMER BANNER                                      */}
+      {/* ========================================================================= */}
+      <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-left text-xs space-y-1 shadow-xs">
+        <div className="flex items-center gap-2 text-amber-300 font-bold">
+          <Info className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>NoticeIQ MVP Demo Mode</span>
+        </div>
+        <p className="text-slate-300 text-[11px] leading-relaxed">
+          Direct 1-click access is active below for rapid prototyping and evaluation. Full multi-factor authentication, email OTP verification, and domain SSO will work properly in the main project.
+        </p>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* DIRECT 1-CLICK ACCESS BUTTONS                                             */}
+      {/* ========================================================================= */}
+      <div className="p-4 rounded-2xl bg-gradient-to-tr from-indigo-900/30 to-violet-900/30 border border-indigo-500/30 text-left space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5 text-indigo-400" />
+            Direct Demo Access
+          </span>
+          <span className="text-[10px] text-emerald-400 font-bold">Instant Login</span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => handleDirectAccess("college")}
+            className="p-2.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-400/40 text-left transition-all group flex items-center justify-between"
+          >
+            <div>
+              <span className="block text-xs font-bold text-white group-hover:text-indigo-200">
+                🎓 College Student
+              </span>
+              <span className="text-[10px] text-slate-400">Debendra Bera • CSE 1st Year</span>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleDirectAccess("school")}
+            className="p-2.5 rounded-xl bg-violet-600/30 hover:bg-violet-600/50 border border-violet-400/40 text-left transition-all group flex items-center justify-between"
+          >
+            <div>
+              <span className="block text-xs font-bold text-white group-hover:text-violet-200">
+                🏫 School Student
+              </span>
+              <span className="text-[10px] text-slate-400">Aarav Sen • Class 10 Sec B</span>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-violet-400 group-hover:translate-x-0.5 transition-transform" />
+          </button>
+        </div>
+      </div>
+
       {/* Mode Switcher Tabs */}
       <div className="flex p-1 bg-white/[0.04] backdrop-blur-md rounded-2xl border border-white/[0.08] shadow-xs">
         <button
@@ -348,7 +414,7 @@ export default function StudentLoginPage() {
               {/* Demo Hint Banner */}
               <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-[11px] text-indigo-300 flex items-center justify-center gap-1.5">
                 <KeyRound className="w-3.5 h-3.5" />
-                <span>Demo OTP code: <strong>123456</strong></span>
+                <span>Demo OTP code: <strong>123456</strong> (pre-filled for fast testing)</span>
               </div>
 
               {/* 6 Digit OTP Inputs */}
@@ -376,7 +442,7 @@ export default function StudentLoginPage() {
                   disabled={isSubmitting}
                   className="w-full glass-btn-primary py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 disabled:opacity-50"
                 >
-                  {isSubmitting ? <span>Verifying...</span> : <span>Verify</span>}
+                  {isSubmitting ? <span>Verifying...</span> : <span>Verify Code</span>}
                 </button>
 
                 <div className="flex items-center justify-between text-xs px-1">

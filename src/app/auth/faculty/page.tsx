@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AuthCard } from "@/components/ui/AuthCard";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -12,15 +13,22 @@ import {
   ArrowRight,
   CheckCircle2,
   BookOpen,
+  Zap,
+  Info,
 } from "lucide-react";
 
 export default function FacultyLoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const router = useRouter();
+  const [email, setEmail] = useState("ananya.sen@futurecollege.ac.in");
+  const [password, setPassword] = useState("FacultySecure2026!");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const handleDirectFacultyAccess = () => {
+    router.push("/institution/faculty");
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,10 +42,8 @@ export default function FacultyLoginPage() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      setSubmittedMessage(
-        `Faculty session verified for ${email}. Portal ready for Step 2.`
-      );
-    }, 600);
+      router.push("/institution/faculty");
+    }, 400);
   };
 
   return (
@@ -59,6 +65,39 @@ export default function FacultyLoginPage() {
         </div>
       }
     >
+      {/* ========================================================================= */}
+      {/* MVP AUTHENTICATION DISCLAIMER BANNER                                      */}
+      {/* ========================================================================= */}
+      <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-left text-xs space-y-1 shadow-xs">
+        <div className="flex items-center gap-2 text-amber-300 font-bold">
+          <Info className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>NoticeIQ MVP Demo Mode</span>
+        </div>
+        <p className="text-slate-300 text-[11px] leading-relaxed">
+          Direct 1-click access is active below for rapid prototyping and evaluation. Full multi-factor authentication, email domain verification, and SSO will work properly in the main project.
+        </p>
+      </div>
+
+      {/* Direct Demo Access CTA */}
+      <div className="p-3.5 rounded-2xl bg-violet-950/40 border border-violet-500/30 flex items-center justify-between text-left">
+        <div>
+          <span className="text-xs font-bold text-white block">
+            🚀 Direct Faculty Demo Access
+          </span>
+          <span className="text-[10px] text-violet-300">
+            Dr. Ananya Sen (HOD • Computer Science)
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={handleDirectFacultyAccess}
+          className="px-3.5 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs shadow-md shadow-violet-600/30 flex items-center gap-1 transition-all"
+        >
+          <span>Enter Portal</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
       {submittedMessage && (
         <div className="p-4 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-300 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
@@ -110,6 +149,7 @@ export default function FacultyLoginPage() {
           <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
             <input
               type="checkbox"
+              defaultChecked
               className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500"
             />
             <span>Remember me</span>
@@ -135,7 +175,7 @@ export default function FacultyLoginPage() {
             isLoading={isSubmitting}
             rightIcon={<ArrowRight className="w-4 h-4" />}
           >
-            Login
+            Login to Faculty Portal
           </Button>
         </div>
       </form>
