@@ -76,7 +76,7 @@ export const RolePortalsSection: React.FC = () => {
         </div>
 
         {/* 3 Direct Role Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto pt-2">
           {roles.map((role) => (
             <RoleCard key={role.id} {...role} />
           ))}

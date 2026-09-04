@@ -32,17 +32,17 @@ export const RoleCard: React.FC<RoleCardProps> = ({
 }) => {
   return (
     <div
-      className={`glass-card rounded-3xl p-7 sm:p-8 flex flex-col justify-between relative overflow-hidden group ${
+      className={`glass-card rounded-3xl p-7 sm:p-8 flex flex-col justify-between relative group ${
         popular
           ? "border-indigo-500/40 shadow-2xl shadow-indigo-500/10 ring-1 ring-indigo-500/30"
           : ""
       }`}
     >
       {/* Top rim shine */}
-      <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+      <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
 
       {popular && (
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-bold tracking-wide uppercase shadow-lg shadow-indigo-500/30 border border-white/20">
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-bold tracking-wide uppercase shadow-lg shadow-indigo-500/30 border border-white/20 whitespace-nowrap">
           Most Popular
         </div>
       )}
