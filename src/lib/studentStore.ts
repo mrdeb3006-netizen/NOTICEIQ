@@ -10,6 +10,11 @@ import {
   TaskStatus,
   StudentImportance,
   TaskContextSuggestion,
+  StudentAvailability,
+  ScheduleItem,
+  DailyPlan,
+  ScheduleItemStatus,
+  ScheduleGenerationResult,
 } from "@/types/student";
 import { Institution, Notice } from "@/types/institution";
 import {
@@ -25,6 +30,7 @@ import {
   invalidateStudentRelevanceCache,
 } from "./relevanceEngine";
 import { generateStudentPriorityTasks } from "./priorityEngine";
+import { generateSchedule } from "./scheduling/scheduleEngine";
 
 const CURRENT_STUDENT_KEY = "noticeiq_current_student";
 const ALL_STUDENT_PROFILES_KEY = "noticeiq_student_profiles";
@@ -726,6 +732,163 @@ export function useStudentAuth() {
     }
   };
 
+  // ============================================================================
+  // STEP 9: SMART SCHEDULING METHODS
+  // ============================================================================
+
+  // Helper to parse student availability from profile
+  const getStudentAvailability = useCallback(
+    (studentOverride?: StudentProfile | null): StudentAvailability => {
+      const target = studentOverride !== undefined ? studentOverride : currentStudent;
+      if (!target) {
+        return {
+          studentId: "anon",
+          preferredStartTime: "18:00",
+          preferredEndTime: "22:00",
+          availableDailyMinutes: 120,
+          bufferPercent: 15,
+        };
+      }
+
+      // Parse available daily hours (e.g. "2 hours" -> 120, "2.5 hours" -> 150)
+      let dailyMins = 120;
+      if (target.availableDailyHours) {
+        const hrMatch = target.availableDailyHours.match(/([\d.]+)/);
+        if (hrMatch) {
+          const num = parseFloat(hrMatch[1]);
+          dailyMins = Math.round(num * 60);
+        }
+      }
+
+      return {
+        studentId: target.id,
+        preferredStartTime: target.preferredStartTime || "18:00",
+        preferredEndTime: target.preferredEndTime || "22:00",
+        availableDailyMinutes: dailyMins > 0 ? dailyMins : 120,
+        bufferPercent: 15,
+        daysAvailable: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+        ],
+      };
+    },
+    [currentStudent]
+  );
+
+  // Helper to get stored schedule overrides
+  const getStoredScheduleOverrides = useCallback(
+    (studentId: string): Record<string, Partial<ScheduleItem>> => {
+      if (typeof window === "undefined") return {};
+      try {
+        const key = `noticeiq_student_schedule_overrides_${studentId}`;
+        const stored = localStorage.getItem(key);
+        return stored ? JSON.parse(stored) : {};
+      } catch {
+        return {};
+      }
+    },
+    []
+  );
+
+  // Helper to save schedule overrides
+  const setStoredScheduleOverrides = useCallback(
+    (studentId: string, map: Record<string, Partial<ScheduleItem>>): void => {
+      if (typeof window === "undefined") return;
+      try {
+        const key = `noticeiq_student_schedule_overrides_${studentId}`;
+        localStorage.setItem(key, JSON.stringify(map));
+        setTaskVersion((v) => v + 1);
+      } catch (err) {
+        console.error("Failed to save schedule overrides", err);
+      }
+    },
+    []
+  );
+
+  // Get Generated Schedule
+  const getStudentSchedule = useCallback(
+    (
+      dateRangeDays: number = 7,
+      studentOverride?: StudentProfile | null
+    ): ScheduleGenerationResult => {
+      const target = studentOverride !== undefined ? studentOverride : currentStudent;
+      if (!target) {
+        return {
+          dailyPlans: [],
+          unscheduledTasks: [],
+          nextActionItem: null,
+          totalPlannedMinutes: 0,
+          totalAvailableMinutes: 0,
+          conflicts: [],
+        };
+      }
+
+      const tasks = getStudentPriorityTasks(target);
+      const availability = getStudentAvailability(target);
+      const overrides = getStoredScheduleOverrides(target.id);
+
+      return generateSchedule(tasks, availability, dateRangeDays, overrides);
+    },
+    [currentStudent, getStudentPriorityTasks, getStudentAvailability, getStoredScheduleOverrides, taskVersion]
+  );
+
+  // Update a schedule item (e.g. move time slot, adjust duration)
+  const updateScheduleItem = (itemId: string, updates: Partial<ScheduleItem>) => {
+    if (!currentStudent) return;
+    const overrides = getStoredScheduleOverrides(currentStudent.id);
+    overrides[itemId] = {
+      ...overrides[itemId],
+      ...updates,
+      scheduleOverride: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setStoredScheduleOverrides(currentStudent.id, overrides);
+  };
+
+  // Remove an item from the schedule (does not delete task from My Actions)
+  const removeScheduleItem = (itemId: string) => {
+    if (!currentStudent) return;
+    const overrides = getStoredScheduleOverrides(currentStudent.id);
+    overrides[itemId] = {
+      ...overrides[itemId],
+      status: "SKIPPED",
+      updatedAt: new Date().toISOString(),
+    };
+    setStoredScheduleOverrides(currentStudent.id, overrides);
+  };
+
+  // Set Schedule Item Status
+  const setScheduleItemStatus = (
+    itemId: string,
+    taskId: string,
+    status: ScheduleItemStatus
+  ) => {
+    if (!currentStudent) return;
+    const isCompleted = status === "COMPLETED";
+
+    // Update in schedule override
+    updateScheduleItem(itemId, {
+      status,
+      completedAt: isCompleted ? new Date().toISOString() : null,
+    });
+
+    // If marked completed from schedule, mark the underlying task completed as well
+    if (isCompleted) {
+      toggleTaskComplete(taskId);
+    }
+  };
+
+  // Regenerate schedule plan
+  const regenerateStudentPlan = (dateRangeDays: number = 7): ScheduleGenerationResult => {
+    setTaskVersion((v) => v + 1);
+    return getStudentSchedule(dateRangeDays);
+  };
+
   // 18. Logout
   const logoutStudent = () => {
     setCurrentStudent(null);
@@ -761,6 +924,12 @@ export function useStudentAuth() {
     toggleTaskComplete,
     resetTaskCompletions,
     markNoticeAsRead,
+    getStudentAvailability,
+    getStudentSchedule,
+    updateScheduleItem,
+    removeScheduleItem,
+    setScheduleItemStatus,
+    regenerateStudentPlan,
     logoutStudent,
   };
 }

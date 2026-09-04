@@ -167,5 +167,73 @@ export interface TaskPriorityResult {
   isOverdue: boolean;
 }
 
+// ============================================================================
+// STEP 9: SMART SCHEDULING & ACTION PLAN ENGINE TYPES
+// ============================================================================
+
+export type ScheduleItemStatus = "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "SKIPPED";
+
+export interface StudentAvailability {
+  studentId: string;
+  preferredStartTime: string; // e.g. "18:00" or "6 PM"
+  preferredEndTime: string;   // e.g. "22:00" or "10 PM"
+  availableDailyMinutes: number; // e.g. 120
+  bufferPercent?: number; // default 15%
+  daysAvailable?: string[]; // e.g. ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+}
+
+export interface ScheduleItem {
+  id: string;
+  studentId: string;
+  taskId: string;
+  taskTitle: string;
+  taskType: TaskType;
+  quadrant: TaskQuadrant;
+  date: string; // "YYYY-MM-DD"
+  startTime: string; // "18:00" or "6:00 PM"
+  endTime: string;   // "18:30" or "6:30 PM"
+  durationMinutes: number;
+  deadline?: string | null;
+  status: ScheduleItemStatus;
+  scheduleOverride?: boolean; // If student manually customized or moved this slot
+  whyScheduledHere: string;   // Explainable rule-based reason
+  isSplit?: boolean;
+  splitPart?: number;
+  totalSplitParts?: number;
+  dependencies?: TaskDependencies;
+  noticeId?: string;
+  noticeTitle?: string;
+  createdAt: string;
+  updatedAt: string;
+  completedAt?: string | null;
+}
+
+export interface DailyPlan {
+  date: string; // "YYYY-MM-DD"
+  dayName: string; // "Today", "Monday", "Tomorrow", etc.
+  availableMinutes: number;
+  scheduledMinutes: number;
+  remainingMinutes: number;
+  bufferMinutes: number;
+  items: ScheduleItem[];
+  isOverloaded?: boolean;
+}
+
+export interface UnscheduledTask {
+  task: PriorityTask;
+  reason: string;
+  suggestedAction: string;
+}
+
+export interface ScheduleGenerationResult {
+  dailyPlans: DailyPlan[];
+  unscheduledTasks: UnscheduledTask[];
+  nextActionItem: ScheduleItem | null;
+  totalPlannedMinutes: number;
+  totalAvailableMinutes: number;
+  conflicts: string[];
+}
+
+
 
 

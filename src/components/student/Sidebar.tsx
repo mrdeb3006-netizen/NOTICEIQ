@@ -55,7 +55,7 @@ export const StudentSidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
       label: "Schedule",
       href: "/student/schedule",
       icon: <Calendar className="w-4 h-4" />,
-      comingSoon: true,
+      badge: "Smart",
     },
     {
       label: "Notices",
