@@ -19,21 +19,47 @@ import {
   Filter,
   ArrowRight,
   MoreVertical,
+  BookOpen,
+  Crown,
+  Shield,
 } from "lucide-react";
 import { useInstitutionData } from "@/lib/institutionStore";
 import { NoticeCategory } from "@/types/institution";
+import { useActiveRole } from "@/lib/roleStore";
 
 export default function NoticesListPage() {
   const { notices, archiveNotice } = useInstitutionData();
+  const { role, facultyProfile, isAdmin } = useActiveRole();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "all" | "published" | "draft" | "archived"
   >("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [activeActionMenu, setActiveActionMenu] = useState<string | null>(null);
+  const [noticeScope, setNoticeScope] = useState<"mine" | "all">("mine");
+
+  // Role-scope baseline: faculty sees own notices, HOD sees dept, admin sees all
+  const scopedNotices = (() => {
+    if (isAdmin) return notices;
+    if (role === "faculty") {
+      if (noticeScope === "all") return notices;
+      return notices.filter(
+        (n, i) =>
+          n.createdBy === facultyProfile?.email ||
+          // demo fallback: first 3 notices represent "my" notices
+          i < 3
+      );
+    }
+    // HOD: dept-scoped
+    return notices.filter(
+      (n) =>
+        n.targetDepartment === facultyProfile?.department ||
+        n.targetType === "all"
+    );
+  })();
 
   // Filter Notices
-  const filtered = notices.filter((n) => {
+  const filtered = scopedNotices.filter((n) => {
     const matchesSearch =
       n.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       n.targetGroup.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -49,9 +75,9 @@ export default function NoticesListPage() {
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  const publishedCount = notices.filter((n) => n.status === "published").length;
-  const draftCount = notices.filter((n) => n.status === "draft").length;
-  const archivedCount = notices.filter((n) => n.status === "archived").length;
+  const publishedCount = scopedNotices.filter((n) => n.status === "published").length;
+  const draftCount = scopedNotices.filter((n) => n.status === "draft").length;
+  const archivedCount = scopedNotices.filter((n) => n.status === "archived").length;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -60,24 +86,55 @@ export default function NoticesListPage() {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900">
-              Notices
+              {isAdmin ? "Notices" : role === "hod" ? "Department Notices" : "My Notices"}
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-              {notices.length} Total
+              {scopedNotices.length} Total
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Publish, schedule, and track official institutional circulars and student announcements.
+            {isAdmin
+              ? "Publish, schedule, and track official institutional circulars and student announcements."
+              : role === "hod"
+              ? `Department notices for ${facultyProfile?.department ?? "your department"}.`
+              : "Notices you have authored. Switch scope to see all department announcements."}
           </p>
         </div>
 
-        <Link
-          href="/institution/notices/create"
-          className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm shadow-indigo-600/20 flex items-center gap-1.5 transition-all hover:scale-[1.02] self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>+ Create Notice</span>
-        </Link>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {/* Faculty scope toggle */}
+          {role === "faculty" && (
+            <div className="flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200">
+              <button
+                onClick={() => setNoticeScope("mine")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  noticeScope === "mine"
+                    ? "bg-white text-indigo-700 shadow-xs border border-indigo-200"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                Mine
+              </button>
+              <button
+                onClick={() => setNoticeScope("all")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  noticeScope === "all"
+                    ? "bg-white text-indigo-700 shadow-xs border border-indigo-200"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                All Dept
+              </button>
+            </div>
+          )}
+          <Link
+            href="/institution/notices/create"
+            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm shadow-indigo-600/20 flex items-center gap-1.5 transition-all hover:scale-[1.02]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Create Notice</span>
+          </Link>
+        </div>
       </div>
 
       {/* Filter and Status Tab Bar */}
@@ -85,7 +142,7 @@ export default function NoticesListPage() {
         {/* Status Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 border-b border-slate-100">
           {[
-            { id: "all", label: "All Notices", count: notices.length },
+            { id: "all", label: "All Notices", count: scopedNotices.length },
             { id: "published", label: "Published", count: publishedCount },
             { id: "draft", label: "Drafts", count: draftCount },
             { id: "archived", label: "Archived", count: archivedCount },

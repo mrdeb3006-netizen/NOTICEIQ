@@ -31,10 +31,15 @@ import {
   Target,
   FileCheck,
   Percent,
+  Crown,
+  BookOpen,
+  Briefcase,
 } from "lucide-react";
+import { useActiveRole } from "@/lib/roleStore";
 
 export default function InstitutionDashboardPage() {
   const { institution, students, faculty, notices } = useInstitutionData();
+  const { role, facultyProfile, isAdmin } = useActiveRole();
   const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
 
   const stats = [
@@ -107,6 +112,46 @@ export default function InstitutionDashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Role Context Banner — shown for Faculty and HOD */}
+      {!isAdmin && (
+        <div className={`flex items-center justify-between p-4 rounded-2xl border ${
+          role === "hod"
+            ? "bg-amber-50/60 border-amber-200"
+            : "bg-violet-50/60 border-violet-200"
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+              role === "hod" ? "bg-amber-100" : "bg-violet-100"
+            }`}>
+              {role === "hod"
+                ? <Crown className={`w-4.5 h-4.5 text-amber-600`} />
+                : <BookOpen className="w-4.5 h-4.5 text-violet-600" />}
+            </div>
+            <div>
+              <p className={`text-xs font-bold ${role === "hod" ? "text-amber-800" : "text-violet-800"}`}>
+                {role === "hod" ? "HOD Dashboard" : "Faculty Dashboard"} — {facultyProfile?.department ?? "Department"}
+              </p>
+              <p className="text-[11px] text-slate-500">
+                {role === "hod"
+                  ? "You are viewing institution-wide metrics. Switch to your dept overview for a focused view."
+                  : "You are viewing institution-wide metrics. Switch to your workspace for your notices."}
+              </p>
+            </div>
+          </div>
+          <Link
+            href={role === "hod" ? "/institution/hod-portal" : "/institution/faculty-portal"}
+            className={`shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+              role === "hod"
+                ? "bg-amber-500 hover:bg-amber-600 text-white shadow-sm shadow-amber-500/20"
+                : "bg-violet-600 hover:bg-violet-700 text-white shadow-sm shadow-violet-600/20"
+            }`}
+          >
+            <Briefcase className="w-3.5 h-3.5" />
+            {role === "hod" ? "Dept Overview" : "My Workspace"}
+          </Link>
+        </div>
+      )}
+
       {/* Overview Stat Cards */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">

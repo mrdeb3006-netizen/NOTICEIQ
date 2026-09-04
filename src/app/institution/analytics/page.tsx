@@ -37,14 +37,19 @@ import {
   DateRangePreset,
   NoticeCategory,
 } from "@/types/institution";
+import { useActiveRole } from "@/lib/roleStore";
 
 export default function InstitutionAnalyticsPage() {
   const { notices, students, institution } = useInstitutionData();
+  const { role, facultyProfile, isAdmin } = useActiveRole();
+
+  // For HOD/Faculty: pre-lock dept filter to their department
+  const defaultDept = !isAdmin && facultyProfile?.department ? facultyProfile.department : "all";
 
   // Filters State
   const [filters, setFilters] = useState<AnalyticsFilterOptions>({
     dateRange: "30days",
-    department: "all",
+    department: defaultDept,
     yearClass: "all",
     section: "all",
     category: "all",
@@ -102,14 +107,22 @@ export default function InstitutionAnalyticsPage() {
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
-              Communication & Action Analytics
+              {isAdmin
+                ? "Communication & Action Analytics"
+                : role === "hod"
+                ? `${facultyProfile?.department ?? "Dept"} Department Analytics`
+                : "My Notice Analytics"}
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-              Step 11 Impact Engine
+              {isAdmin ? "Institution-Wide" : role === "hod" ? "Dept Scoped" : "My Notices"}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Measure how institutional information turns into student action across cohorts.
+            {isAdmin
+              ? "Measure how institutional information turns into student action across cohorts."
+              : role === "hod"
+              ? `Analytics scoped to ${facultyProfile?.department ?? "your"} department notices and student actions.`
+              : "Performance analytics for notices you have authored and published."}
           </p>
         </div>
 
@@ -170,7 +183,8 @@ export default function InstitutionAnalyticsPage() {
             <select
               value={filters.department}
               onChange={(e) => setFilters({ ...filters, department: e.target.value })}
-              className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+              disabled={!isAdmin && !!facultyProfile?.department}
+              className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <option value="all">All Departments</option>
               <option value="CSE">CSE (Computer Science)</option>

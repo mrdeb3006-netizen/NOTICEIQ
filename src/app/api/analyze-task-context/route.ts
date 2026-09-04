@@ -148,7 +148,8 @@ Respond strictly with valid JSON with this exact schema:
       suggestedQuadrant,
       confidence,
     });
-  } catch (error: any) {
+  } catch (err: unknown) {
+    const error = err as { message?: string };
     return NextResponse.json(
       { error: error?.message || "Internal server error" },
       { status: 500 }

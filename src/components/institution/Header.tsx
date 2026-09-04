@@ -6,15 +6,14 @@ import {
   Bell,
   Menu,
   Plus,
-  Search,
   CheckCircle2,
-  AlertCircle,
-  Megaphone,
-  User,
   Shield,
+  BookOpen,
+  Crown,
   X,
 } from "lucide-react";
 import { useInstitutionData } from "@/lib/institutionStore";
+import { useActiveRole } from "@/lib/roleStore";
 
 interface HeaderProps {
   onOpenMobileMenu: () => void;
@@ -22,12 +21,31 @@ interface HeaderProps {
   subtitle?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({
-  onOpenMobileMenu,
-  title = "Good Morning, Admin 👋",
-  subtitle = "Manage your institution's information and student communication.",
-}) => {
+const ROLE_PILLS = {
+  admin: {
+    label: "Admin Console",
+    color:
+      "bg-indigo-50 text-indigo-700 border border-indigo-200",
+    icon: <Shield className="w-3 h-3" />,
+  },
+  hod: {
+    label: "HOD Portal",
+    color:
+      "bg-amber-50 text-amber-700 border border-amber-200",
+    icon: <Crown className="w-3 h-3" />,
+  },
+  faculty: {
+    label: "Faculty Portal",
+    color:
+      "bg-violet-50 text-violet-700 border border-violet-200",
+    icon: <BookOpen className="w-3 h-3" />,
+  },
+};
+
+export const Header: React.FC<HeaderProps> = ({ onOpenMobileMenu }) => {
   const { institution } = useInstitutionData();
+  const { role, facultyProfile, isAdmin } = useActiveRole();
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([
     {
@@ -57,15 +75,50 @@ export const Header: React.FC<HeaderProps> = ({
   ]);
 
   const unreadCount = notifications.filter((n) => n.unread).length;
-
-  const markAllAsRead = () => {
+  const markAllAsRead = () =>
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-  };
+
+  // Greeting & subtitle
+  const now = new Date();
+  const hour = now.getHours();
+  const timeOfDay =
+    hour < 12 ? "Morning" : hour < 17 ? "Afternoon" : "Evening";
+
+  let greeting: string;
+  let subtitle: string;
+  if (isAdmin) {
+    greeting = `Good ${timeOfDay}, Admin 👋`;
+    subtitle =
+      "Manage your institution's information and student communication.";
+  } else if (role === "hod") {
+    const firstName = facultyProfile?.name?.split(" ").pop() ?? "Doctor";
+    greeting = `Good ${timeOfDay}, ${firstName} 👋`;
+    subtitle = `HOD Dashboard — ${facultyProfile?.department ?? "Department"} • Manage notices & track student engagement.`;
+  } else {
+    const firstName = facultyProfile?.name?.split(" ").pop() ?? "Professor";
+    greeting = `Good ${timeOfDay}, Prof. ${firstName} 👋`;
+    subtitle = `Faculty Workspace — ${facultyProfile?.department ?? "Department"} • Publish notices and monitor your student reach.`;
+  }
+
+  const rolePill = ROLE_PILLS[role];
+
+  const displayName =
+    isAdmin
+      ? institution?.adminName || "Administrator"
+      : facultyProfile?.name || "Staff Member";
+
+  const displayInitials =
+    displayName
+      .split(" ")
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "AD";
 
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-8 py-4">
       <div className="flex items-center justify-between gap-4 max-w-7xl mx-auto">
-        {/* Left: Mobile hamburger & Page Headings */}
+        {/* Left */}
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -77,17 +130,24 @@ export const Header: React.FC<HeaderProps> = ({
 
           <div>
             <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-              {title}
+              {greeting}
+              {/* Role pill */}
+              <span
+                className={`hidden sm:inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${rolePill.color}`}
+              >
+                {rolePill.icon}
+                {rolePill.label}
+              </span>
             </h1>
-            <p className="text-xs text-slate-600 hidden sm:block">
+            <p className="text-xs text-slate-600 hidden sm:block mt-0.5">
               {subtitle}
             </p>
           </div>
         </div>
 
-        {/* Right: Quick Action, Notifications & Admin Avatar */}
+        {/* Right */}
         <div className="flex items-center gap-3">
-          {/* Quick Notice CTA button */}
+          {/* Publish Notice — visible to all roles */}
           <Link
             href="/institution/notices/create"
             className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-sm shadow-indigo-600/20 transition-all hover:scale-[1.02]"
@@ -96,7 +156,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Publish Notice</span>
           </Link>
 
-          {/* Notifications Dropdown Container */}
+          {/* Notifications */}
           <div className="relative">
             <button
               type="button"
@@ -110,7 +170,6 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Notifications Popover */}
             {showNotifications && (
               <>
                 <div
@@ -120,7 +179,9 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-white border border-slate-200 shadow-xl z-50 p-4 space-y-3 animate-in fade-in zoom-in-95">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-xs text-slate-900">Notifications</span>
+                      <span className="font-bold text-xs text-slate-900">
+                        Notifications
+                      </span>
                       {unreadCount > 0 && (
                         <span className="px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-600 text-[10px] font-bold">
                           {unreadCount} new
@@ -148,10 +209,16 @@ export const Header: React.FC<HeaderProps> = ({
                         }`}
                       >
                         <div className="flex items-center justify-between text-[11px] mb-1">
-                          <span className="font-bold text-slate-900">{n.title}</span>
-                          <span className="text-slate-600 text-[10px]">{n.time}</span>
+                          <span className="font-bold text-slate-900">
+                            {n.title}
+                          </span>
+                          <span className="text-slate-500 text-[10px]">
+                            {n.time}
+                          </span>
                         </div>
-                        <p className="text-[11px] text-slate-600 leading-snug">{n.desc}</p>
+                        <p className="text-[11px] text-slate-600 leading-snug">
+                          {n.desc}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -159,9 +226,9 @@ export const Header: React.FC<HeaderProps> = ({
                   <div className="pt-1 text-center">
                     <button
                       onClick={() => setShowNotifications(false)}
-                      className="text-xs text-slate-600 hover:text-slate-700 font-medium"
+                      className="text-xs text-slate-500 hover:text-slate-700 font-medium flex items-center gap-1 mx-auto"
                     >
-                      Close
+                      <X className="w-3 h-3" /> Close
                     </button>
                   </div>
                 </div>
@@ -169,17 +236,21 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Admin Avatar Pill */}
+          {/* Avatar */}
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-violet-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
-              {institution?.adminName ? institution.adminName.charAt(0) : "A"}
+              {displayInitials}
             </div>
             <div className="hidden sm:block text-left">
               <span className="block text-xs font-bold text-slate-900 leading-none truncate max-w-[130px]">
-                {institution?.adminName || "Admin"}
+                {displayName}
               </span>
-              <span className="text-[10px] font-medium text-slate-600">
-                Workspace Admin
+              <span className="text-[10px] font-medium text-slate-500">
+                {role === "admin"
+                  ? "Workspace Admin"
+                  : role === "hod"
+                  ? "Head of Dept"
+                  : facultyProfile?.roleTitle ?? "Faculty"}
               </span>
             </div>
           </div>

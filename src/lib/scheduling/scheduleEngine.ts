@@ -269,9 +269,6 @@ export function generateSchedule(
   const scheduledTaskDates: Record<string, { dateStr: string; dayIndex: number; endMinutesFromMidnight: number }> = {};
   const completedDependencies = new Set<string>();
 
-  // Track highest day index scheduled for priority tiers to maintain monotonic ordering
-  let highestScheduledDay = 0;
-
   // Initialize daily plan buckets for dateRangeDays
   for (let d = 0; d < dateRangeDays; d++) {
     const planDate = new Date(now);
@@ -293,7 +290,7 @@ export function generateSchedule(
 
   // 3. Process tasks and place into daily plan slots
   sortedTasks.forEach((task) => {
-    let taskDuration = task.estimatedMinutes || DEFAULT_TASK_DURATION_MINUTES;
+    const taskDuration = task.estimatedMinutes || DEFAULT_TASK_DURATION_MINUTES;
     const taskDeadlineDate = parseFlexibleDate(task.deadline);
     const isPrerequisite = !!task.dependencies?.isPrerequisiteForOthers;
 

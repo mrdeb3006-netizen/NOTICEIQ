@@ -635,3 +635,30 @@ Proof of grade transcript and recommendation letter must be submitted to the Dea
   },
 ];
 
+// ─────────────────────────────────────────────────────────────
+// Demo Role Profiles — used by institution portal role switcher
+// ─────────────────────────────────────────────────────────────
+
+import type { FacultyRoleProfile } from "@/lib/roleStore";
+
+export const DEMO_ROLE_PROFILES: {
+  admin: null;
+  hod: FacultyRoleProfile;
+  faculty: FacultyRoleProfile;
+} = {
+  admin: null,
+  hod: {
+    id: "fac-001",
+    name: "Dr. Ananya Sen",
+    email: "ananya.sen@futurecollege.ac.in",
+    department: "CSE",
+    roleTitle: "Head of Department",
+  },
+  faculty: {
+    id: "fac-002",
+    name: "Prof. Sourav Das",
+    email: "sourav.das@futurecollege.ac.in",
+    department: "CSE",
+    roleTitle: "Associate Professor",
+  },
+};
