@@ -17,22 +17,20 @@ export const BrandWordmark: React.FC<BrandWordmarkProps> = ({
   subtext = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
-  const [isHovered, setIsHovered] = useState(false);
+  const [transformStyle, setTransformStyle] = useState<string>("translate3d(0, 0, 0)");
 
+  // Subtle physics micro-reaction to cursor without changing any text color
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    setMousePos({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    });
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    // Micro-tilt physics (subtle 2px max movement)
+    setTransformStyle(`translate3d(${x * 0.08}px, ${y * 0.08}px, 0)`);
   };
 
-  const handleMouseEnter = () => setIsHovered(true);
   const handleMouseLeave = () => {
-    setIsHovered(false);
-    setMousePos(null);
+    setTransformStyle("translate3d(0, 0, 0)");
   };
 
   const sizeClasses = {
@@ -46,43 +44,21 @@ export const BrandWordmark: React.FC<BrandWordmarkProps> = ({
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`relative inline-flex flex-col select-none cursor-pointer group py-1 px-2 rounded-lg transition-all duration-300 ${className}`}
+      style={{
+        transform: transformStyle,
+        transition: "transform 0.15s cubic-bezier(0.2, 0, 0, 1)",
+      }}
+      className={`relative inline-flex flex-col select-none cursor-pointer py-1 px-2 rounded-lg will-change-transform ${className}`}
     >
-      {/* Dynamic Cursor Reactive Iridescent Shimmer Aura */}
-      {isHovered && mousePos && (
-        <div
-          className="absolute pointer-events-none transition-all duration-300 -inset-1 rounded-xl blur-lg opacity-50"
-          style={{
-            background: `radial-gradient(circle 50px at ${mousePos.x}px ${mousePos.y}px, rgba(99, 102, 241, 0.35) 0%, rgba(139, 92, 246, 0.2) 50%, transparent 70%)`,
-          }}
-        />
-      )}
-
-      {/* Official Minimalist Transparent Wordmark (Never turns solid white) */}
-      <span
-        className={`font-bold uppercase transition-all duration-300 ${sizeClasses[size]} relative z-10`}
-        style={
-          isHovered && mousePos
-            ? {
-                background: `radial-gradient(circle 80px at ${mousePos.x}px ${mousePos.y}px, rgba(165, 180, 252, 0.9) 0%, rgba(192, 132, 252, 0.75) 35%, rgba(226, 232, 240, 0.6) 70%, rgba(255, 255, 255, 0.35) 100%)`,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }
-            : {
-                background:
-                  "linear-gradient(135deg, rgba(241, 245, 249, 0.8) 0%, rgba(148, 163, 184, 0.55) 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }
-        }
-      >
-        NOTICE<span className="font-light text-indigo-400/80">IQ</span>
+      {/* Official Minimalist Transparent Wordmark — Completely Stable Text Color */}
+      <span className={`font-bold uppercase ${sizeClasses[size]} select-none`}>
+        <span className="text-slate-300/80">NOTICE</span>
+        <span className="font-light text-indigo-400/90 ml-0.5">IQ</span>
       </span>
 
       {subtext && (
-        <span className="text-[8px] font-mono tracking-[0.3em] uppercase text-slate-500 group-hover:text-indigo-400/80 transition-colors duration-200 mt-0.5">
+        <span className="text-[8px] font-mono tracking-[0.3em] uppercase text-slate-500 mt-0.5">
           Action Platform
         </span>
       )}
