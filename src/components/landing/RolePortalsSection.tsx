@@ -30,7 +30,7 @@ export const RolePortalsSection: React.FC = () => {
       buttonLabel: "Institution Login",
       secondaryAction: {
         label: "Register New Institution",
-        href: "/auth/institution/register",
+        href: "/institution/register",
       },
       features: [
         "Campus-wide notice dispatch",
@@ -87,7 +87,7 @@ export const RolePortalsSection: React.FC = () => {
           <div className="inline-block px-5 py-2.5 rounded-2xl bg-white/[0.03] backdrop-blur-md border border-white/[0.08] shadow-xs text-xs text-slate-400">
             Need to register a new school or university campus?{" "}
             <Link
-              href="/auth/institution/register"
+              href="/institution/register"
               className="font-bold text-indigo-400 hover:text-indigo-300 hover:underline transition-colors"
             >
               Register your institution →

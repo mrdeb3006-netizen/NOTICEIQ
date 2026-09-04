@@ -26,7 +26,7 @@ export const Footer: React.FC = () => {
             <Link href="/auth/faculty" className="hover:text-indigo-400 transition-colors">
               Faculty Portal
             </Link>
-            <Link href="/auth/institution/register" className="hover:text-indigo-400 transition-colors">
+            <Link href="/institution/register" className="hover:text-indigo-400 transition-colors">
               Register Institution
             </Link>
           </div>

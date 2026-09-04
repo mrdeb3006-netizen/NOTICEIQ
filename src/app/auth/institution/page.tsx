@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AuthCard } from "@/components/ui/AuthCard";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -24,6 +25,8 @@ export default function InstitutionLoginPage() {
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const router = useRouter();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -36,10 +39,8 @@ export default function InstitutionLoginPage() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      setSubmittedMessage(
-        `Credentials verified for ${email}. Portal authentication ready for Step 2.`
-      );
-    }, 600);
+      router.push("/institution/dashboard");
+    }, 500);
   };
 
   return (
@@ -57,7 +58,7 @@ export default function InstitutionLoginPage() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <span className="text-slate-400">Need to register a new school or campus?</span>
           <Link
-            href="/auth/institution/register"
+            href="/institution/register"
             className="font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
           >
             <PlusCircle className="w-3.5 h-3.5" />
