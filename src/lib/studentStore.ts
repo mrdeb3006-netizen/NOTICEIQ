@@ -1,7 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { StudentProfile, StudentAccessType } from "@/types/student";
+import { useEffect, useState, useCallback } from "react";
+import {
+  StudentProfile,
+  StudentAccessType,
+  NoticeRelevance,
+  PriorityTask,
+  TaskQuadrant,
+  TaskStatus,
+  StudentImportance,
+  TaskContextSuggestion,
+} from "@/types/student";
 import { Institution, Notice } from "@/types/institution";
 import {
   registeredInstitutions,
@@ -9,9 +18,21 @@ import {
   initialNotices,
   DEMO_OTP,
 } from "./mockData";
+import {
+  calculateNoticeRelevance,
+  getCachedRelevance,
+  setCachedRelevance,
+  invalidateStudentRelevanceCache,
+} from "./relevanceEngine";
+import { generateStudentPriorityTasks } from "./priorityEngine";
 
 const CURRENT_STUDENT_KEY = "noticeiq_current_student";
 const ALL_STUDENT_PROFILES_KEY = "noticeiq_student_profiles";
+
+export type NoticeWithRelevance = Notice & {
+  isRead: boolean;
+  relevance: NoticeRelevance;
+};
 
 function getStoredStudent(): StudentProfile | null {
   if (typeof window === "undefined") return null;
@@ -55,34 +76,143 @@ function setStoredAllProfiles(profiles: StudentProfile[]): void {
   }
 }
 
-import {
-  calculateNoticeRelevance,
-  getCachedRelevance,
-  setCachedRelevance,
-  invalidateStudentRelevanceCache,
-} from "./relevanceEngine";
-import { generateStudentPriorityTasks } from "./priorityEngine";
-import { NoticeRelevance, PriorityTask } from "@/types/student";
-
-export type NoticeWithRelevance = Notice & {
-  isRead: boolean;
-  relevance: NoticeRelevance;
+// Initial demo personal tasks
+const defaultPersonalTasksMap: Record<string, PriorityTask[]> = {
+  stu_1: [
+    {
+      id: "pt_stu_1_buy_folder",
+      studentId: "stu_1",
+      taskType: "PERSONAL",
+      title: "Buy folder for documents",
+      description: "Buy plastic document folder for scholarship hardcopy papers.",
+      deadline: "September 6, 2026",
+      estimatedMinutes: 20,
+      studentImportanceOverride: "MEDIUM",
+      privateNote: "Buy it from the stationery shop near college gate.",
+      useNoteForAI: true,
+      aiUrgencyScore: 65,
+      aiImportanceScore: 60,
+      aiConsequenceScore: 50,
+      aiRelevanceScore: 100,
+      aiPriorityScore: 66,
+      aiQuadrant: "Q2",
+      aiPriorityReasons: [
+        "• Due in 2 days.",
+        "• Marked as MEDIUM importance by you.",
+        "• Personal task created directly by you.",
+      ],
+      urgencyScore: 65,
+      importanceScore: 60,
+      consequenceScore: 50,
+      relevanceScore: 100,
+      priorityScore: 66,
+      quadrant: "Q2",
+      finalPriorityScore: 66,
+      finalQuadrant: "Q2",
+      priorityReasons: [
+        "• Due in 2 days.",
+        "• Marked as MEDIUM importance by you.",
+        "• Personal task created directly by you.",
+      ],
+      recommendedAction: "Important goal — schedule time in your study block.",
+      status: "TODO",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ],
 };
-
 
 export function useStudentAuth() {
   const [currentStudent, setCurrentStudent] = useState<StudentProfile | null>(null);
   const [allStudents, setAllStudents] = useState<StudentProfile[]>(initialStudentProfiles);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
+  const [taskVersion, setTaskVersion] = useState(0); // Trigger re-renders when overrides or personal tasks change
 
   useEffect(() => {
-    // Default to Debendra Bera if no student is active, to allow direct inspection
     const stored = getStoredStudent() || initialStudentProfiles[0];
     const storedProfiles = getStoredAllProfiles();
     setCurrentStudent(stored);
     setAllStudents(storedProfiles);
     setIsLoaded(true);
   }, []);
+
+  // Load completed tasks for current student
+  useEffect(() => {
+    if (typeof window === "undefined" || !currentStudent) return;
+    try {
+      const stored = localStorage.getItem(`noticeiq_completed_tasks_${currentStudent.id}`);
+      if (stored) {
+        setCompletedTaskIds(JSON.parse(stored));
+      } else {
+        setCompletedTaskIds([]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [currentStudent?.id]);
+
+  // Helper to get personal tasks for a student
+  const getStoredPersonalTasks = useCallback((studentId: string): PriorityTask[] => {
+    if (typeof window === "undefined") return defaultPersonalTasksMap[studentId] || [];
+    try {
+      const key = `noticeiq_student_personal_tasks_${studentId}`;
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      // Initialize with default demo personal tasks if available
+      if (defaultPersonalTasksMap[studentId]) {
+        localStorage.setItem(key, JSON.stringify(defaultPersonalTasksMap[studentId]));
+        return defaultPersonalTasksMap[studentId];
+      }
+      return [];
+    } catch {
+      return defaultPersonalTasksMap[studentId] || [];
+    }
+  }, []);
+
+  // Helper to save personal tasks for a student
+  const setStoredPersonalTasks = useCallback((studentId: string, tasks: PriorityTask[]): void => {
+    if (typeof window === "undefined") return;
+    try {
+      const key = `noticeiq_student_personal_tasks_${studentId}`;
+      localStorage.setItem(key, JSON.stringify(tasks));
+      setTaskVersion((v) => v + 1);
+    } catch (err) {
+      console.error("Failed to save personal tasks", err);
+    }
+  }, []);
+
+  // Helper to get task overrides map for a student
+  const getStoredOverridesMap = useCallback(
+    (studentId: string): Record<string, Partial<PriorityTask>> => {
+      if (typeof window === "undefined") return {};
+      try {
+        const key = `noticeiq_student_overrides_${studentId}`;
+        const stored = localStorage.getItem(key);
+        return stored ? JSON.parse(stored) : {};
+      } catch {
+        return {};
+      }
+    },
+    []
+  );
+
+  // Helper to save task overrides map for a student
+  const setStoredOverridesMap = useCallback(
+    (studentId: string, map: Record<string, Partial<PriorityTask>>): void => {
+      if (typeof window === "undefined") return;
+      try {
+        const key = `noticeiq_student_overrides_${studentId}`;
+        localStorage.setItem(key, JSON.stringify(map));
+        setTaskVersion((v) => v + 1);
+      } catch (err) {
+        console.error("Failed to save overrides map", err);
+      }
+    },
+    []
+  );
 
   // 1. Domain verification for college email
   const verifyCollegeDomain = (email: string) => {
@@ -96,7 +226,6 @@ export function useStudentAuth() {
 
     const domainPart = `@${trimmed.split("@")[1]}`;
     
-    // Check registered institutions in state or mock data
     let institutionsList = registeredInstitutions;
     if (typeof window !== "undefined") {
       try {
@@ -154,7 +283,6 @@ export function useStudentAuth() {
       };
     }
 
-    // Email is verified domain, but not pre-enrolled in directory
     return {
       success: true,
       studentFound: false,
@@ -203,7 +331,7 @@ export function useStudentAuth() {
     return null;
   };
 
-  // 5. Update preferences on onboarding or profile page (institution fields are immutable)
+  // 5. Update preferences on onboarding or profile page
   const updateStudentPreferences = (preferences: {
     interests: string[];
     preferredStartTime: string;
@@ -212,7 +340,6 @@ export function useStudentAuth() {
   }) => {
     if (!currentStudent) return;
 
-    // Student can only update their personal preferences, NOT institution credentials
     const updated: StudentProfile = {
       ...currentStudent,
       interests: preferences.interests,
@@ -225,10 +352,8 @@ export function useStudentAuth() {
     setCurrentStudent(updated);
     setStoredStudent(updated);
 
-    // Invalidate cached relevance for this student so recalculation happens fresh
     invalidateStudentRelevanceCache(updated.id);
 
-    // Also update in all profiles list
     const all = getStoredAllProfiles();
     const nextAll = all.map((p) => (p.id === updated.id ? updated : p));
     setStoredAllProfiles(nextAll);
@@ -238,78 +363,60 @@ export function useStudentAuth() {
   };
 
   // 6. Get all notices with calculated NoticeRelevance
-  const getStudentNoticesWithRelevance = (
-    studentOverride?: StudentProfile | null
-  ): NoticeWithRelevance[] => {
-    const targetStudent = studentOverride !== undefined ? studentOverride : currentStudent;
-    if (!targetStudent) return [];
+  const getStudentNoticesWithRelevance = useCallback(
+    (studentOverride?: StudentProfile | null): NoticeWithRelevance[] => {
+      const targetStudent = studentOverride !== undefined ? studentOverride : currentStudent;
+      if (!targetStudent) return [];
 
-    let allNotices: Notice[] = initialNotices;
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("noticeiq_notices");
-        if (stored) {
-          allNotices = JSON.parse(stored);
+      let allNotices: Notice[] = initialNotices;
+      if (typeof window !== "undefined") {
+        try {
+          const stored = localStorage.getItem("noticeiq_notices");
+          if (stored) {
+            allNotices = JSON.parse(stored);
+          }
+        } catch (e) {
+          console.error(e);
         }
-      } catch (e) {
-        console.error(e);
       }
-    }
 
-    // Read notices cache
-    let readNoticeIds: string[] = [];
-    if (typeof window !== "undefined") {
-      try {
-        const storedRead = localStorage.getItem(`noticeiq_read_notices_${targetStudent.id}`);
-        if (storedRead) {
-          readNoticeIds = JSON.parse(storedRead);
+      let readNoticeIds: string[] = [];
+      if (typeof window !== "undefined") {
+        try {
+          const storedRead = localStorage.getItem(`noticeiq_read_notices_${targetStudent.id}`);
+          if (storedRead) {
+            readNoticeIds = JSON.parse(storedRead);
+          }
+        } catch (e) {
+          console.error(e);
         }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    const publishedNotices = allNotices.filter((n) => n.status === "published");
-
-    return publishedNotices.map((notice) => {
-      // Check cache first
-      let relevance = getCachedRelevance(notice.id, targetStudent.id);
-      if (!relevance) {
-        relevance = calculateNoticeRelevance(notice, targetStudent);
-        setCachedRelevance(relevance);
       }
 
-      return {
-        ...notice,
-        isRead: readNoticeIds.includes(notice.id),
-        relevance,
-      };
-    });
-  };
+      const publishedNotices = allNotices.filter((n) => n.status === "published");
 
-  // Legacy compatibility helper
+      return publishedNotices.map((notice) => {
+        let relevance = getCachedRelevance(notice.id, targetStudent.id);
+        if (!relevance) {
+          relevance = calculateNoticeRelevance(notice, targetStudent);
+          setCachedRelevance(relevance);
+        }
+
+        return {
+          ...notice,
+          isRead: readNoticeIds.includes(notice.id),
+          relevance,
+        };
+      });
+    },
+    [currentStudent]
+  );
+
   const getStudentNotices = (studentOverride?: StudentProfile | null): Array<Notice & { isRead: boolean }> => {
     const withRel = getStudentNoticesWithRelevance(studentOverride);
     return withRel.filter((n) => n.relevance.relevance !== "NOT_RELEVANT");
   };
 
-  // 7. Completed tasks state
-  const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !currentStudent) return;
-    try {
-      const stored = localStorage.getItem(`noticeiq_completed_tasks_${currentStudent.id}`);
-      if (stored) {
-        setCompletedTaskIds(JSON.parse(stored));
-      } else {
-        setCompletedTaskIds([]);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  }, [currentStudent?.id]);
-
+  // 7. Toggle task complete
   const toggleTaskComplete = (taskId: string) => {
     if (!currentStudent || typeof window === "undefined") return;
     try {
@@ -317,13 +424,41 @@ export function useStudentAuth() {
       const stored = localStorage.getItem(key);
       const currentCompleted: string[] = stored ? JSON.parse(stored) : [];
       let nextCompleted: string[] = [];
-      if (currentCompleted.includes(taskId)) {
+      const isNowCompleted = !currentCompleted.includes(taskId);
+
+      if (!isNowCompleted) {
         nextCompleted = currentCompleted.filter((id) => id !== taskId);
       } else {
         nextCompleted = [...currentCompleted, taskId];
       }
       localStorage.setItem(key, JSON.stringify(nextCompleted));
       setCompletedTaskIds(nextCompleted);
+
+      // Also update status in override / personal task if needed
+      if (taskId.startsWith("pt_")) {
+        const personalTasks = getStoredPersonalTasks(currentStudent.id);
+        const nextTasks = personalTasks.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                status: (isNowCompleted ? "COMPLETED" : "TODO") as TaskStatus,
+                completedAt: isNowCompleted ? new Date().toISOString() : null,
+                updatedAt: new Date().toISOString(),
+              }
+            : t
+        );
+        setStoredPersonalTasks(currentStudent.id, nextTasks);
+      } else {
+        const overrides = getStoredOverridesMap(currentStudent.id);
+        overrides[taskId] = {
+          ...overrides[taskId],
+          status: isNowCompleted ? "COMPLETED" : "TODO",
+          completedAt: isNowCompleted ? new Date().toISOString() : null,
+          updatedAt: new Date().toISOString(),
+        };
+        setStoredOverridesMap(currentStudent.id, overrides);
+      }
+      setTaskVersion((v) => v + 1);
     } catch (e) {
       console.error(e);
     }
@@ -335,32 +470,247 @@ export function useStudentAuth() {
       const key = `noticeiq_completed_tasks_${currentStudent.id}`;
       localStorage.removeItem(key);
       setCompletedTaskIds([]);
+
+      // Reset completed status in personal tasks
+      const personalTasks = getStoredPersonalTasks(currentStudent.id);
+      const nextPersonal = personalTasks.map((t) =>
+        t.status === "COMPLETED" ? { ...t, status: "TODO" as TaskStatus, completedAt: null } : t
+      );
+      setStoredPersonalTasks(currentStudent.id, nextPersonal);
+
+      // Reset in overrides
+      const overrides = getStoredOverridesMap(currentStudent.id);
+      Object.keys(overrides).forEach((id) => {
+        if (overrides[id]?.status === "COMPLETED") {
+          overrides[id].status = "TODO";
+          overrides[id].completedAt = null;
+        }
+      });
+      setStoredOverridesMap(currentStudent.id, overrides);
+
+      setTaskVersion((v) => v + 1);
     } catch (e) {
       console.error(e);
     }
   };
 
-  // 8. Get Prioritized Tasks (Step 7 Priority Engine)
-  const getStudentPriorityTasks = (studentOverride?: StudentProfile | null): PriorityTask[] => {
-    const targetStudent = studentOverride !== undefined ? studentOverride : currentStudent;
-    if (!targetStudent) return [];
+  // 8. Priority Tasks Engine (Step 7 + Step 8 Control Layer)
+  const getStudentPriorityTasks = useCallback(
+    (studentOverride?: StudentProfile | null): PriorityTask[] => {
+      const targetStudent = studentOverride !== undefined ? studentOverride : currentStudent;
+      if (!targetStudent) return [];
 
-    let activeCompleted = completedTaskIds;
-    if (typeof window !== "undefined" && targetStudent.id !== currentStudent?.id) {
-      try {
-        const stored = localStorage.getItem(`noticeiq_completed_tasks_${targetStudent.id}`);
-        if (stored) activeCompleted = JSON.parse(stored);
-        else activeCompleted = [];
-      } catch {
-        activeCompleted = [];
+      let activeCompleted = completedTaskIds;
+      if (typeof window !== "undefined" && targetStudent.id !== currentStudent?.id) {
+        try {
+          const stored = localStorage.getItem(`noticeiq_completed_tasks_${targetStudent.id}`);
+          if (stored) activeCompleted = JSON.parse(stored);
+          else activeCompleted = [];
+        } catch {
+          activeCompleted = [];
+        }
       }
-    }
 
-    const noticesWithRel = getStudentNoticesWithRelevance(targetStudent);
-    return generateStudentPriorityTasks(targetStudent, noticesWithRel, activeCompleted);
+      const noticesWithRel = getStudentNoticesWithRelevance(targetStudent);
+      const overridesMap = getStoredOverridesMap(targetStudent.id);
+      const personalTasks = getStoredPersonalTasks(targetStudent.id);
+
+      return generateStudentPriorityTasks(
+        targetStudent,
+        noticesWithRel,
+        activeCompleted,
+        undefined,
+        overridesMap,
+        personalTasks
+      );
+    },
+    [currentStudent, completedTaskIds, getStudentNoticesWithRelevance, getStoredOverridesMap, getStoredPersonalTasks, taskVersion]
+  );
+
+  // 9. Get Single Task By ID
+  const getTaskById = useCallback(
+    (taskId: string, studentOverride?: StudentProfile | null): PriorityTask | null => {
+      const allTasks = getStudentPriorityTasks(studentOverride);
+      return allTasks.find((t) => t.id === taskId) || null;
+    },
+    [getStudentPriorityTasks]
+  );
+
+  // 10. Add Personal Task
+  const addPersonalTask = (data: {
+    title: string;
+    description?: string;
+    deadline?: string;
+    estimatedMinutes?: number;
+    studentImportanceOverride?: StudentImportance | null;
+    privateNote?: string;
+    useNoteForAI?: boolean;
+    blockedByTaskId?: string;
+    blockedByTaskTitle?: string;
+  }): PriorityTask => {
+    if (!currentStudent) throw new Error("No authenticated student");
+
+    const newId = `pt_${currentStudent.id}_${Date.now()}`;
+    const personalTasks = getStoredPersonalTasks(currentStudent.id);
+
+    const newTask: PriorityTask = {
+      id: newId,
+      studentId: currentStudent.id,
+      taskType: "PERSONAL",
+      title: data.title.trim(),
+      description: data.description?.trim(),
+      deadline: data.deadline?.trim() || null,
+      estimatedMinutes: data.estimatedMinutes || 30,
+      studentImportanceOverride: data.studentImportanceOverride || "MEDIUM",
+      privateNote: data.privateNote?.trim(),
+      useNoteForAI: data.useNoteForAI !== undefined ? data.useNoteForAI : true,
+      dependencies: {
+        blockedByTaskId: data.blockedByTaskId,
+        blockedByTaskTitle: data.blockedByTaskTitle,
+        isBlocked: !!data.blockedByTaskId,
+        prerequisiteCompleted: false,
+      },
+      status: "TODO",
+      aiUrgencyScore: 50,
+      aiImportanceScore: 60,
+      aiConsequenceScore: 50,
+      aiRelevanceScore: 100,
+      aiPriorityScore: 60,
+      aiQuadrant: "Q2",
+      aiPriorityReasons: ["Personal task created by you."],
+      urgencyScore: 50,
+      importanceScore: 60,
+      consequenceScore: 50,
+      relevanceScore: 100,
+      priorityScore: 60,
+      quadrant: "Q2",
+      finalPriorityScore: 60,
+      finalQuadrant: "Q2",
+      priorityReasons: ["Personal task created by you."],
+      recommendedAction: "Important goal — schedule time in your study block.",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    const nextList = [newTask, ...personalTasks];
+    setStoredPersonalTasks(currentStudent.id, nextList);
+    setTaskVersion((v) => v + 1);
+
+    return newTask;
   };
 
-  // 9. Mark notice as read
+  // 11. Update Task (Handles both AI-generated task representations and Personal tasks)
+  const updateTask = (taskId: string, updates: Partial<PriorityTask>) => {
+    if (!currentStudent) return;
+
+    if (taskId.startsWith("pt_")) {
+      // Personal task update
+      const personalTasks = getStoredPersonalTasks(currentStudent.id);
+      const nextList = personalTasks.map((t) =>
+        t.id === taskId
+          ? {
+              ...t,
+              ...updates,
+              updatedAt: new Date().toISOString(),
+            }
+          : t
+      );
+      setStoredPersonalTasks(currentStudent.id, nextList);
+    } else {
+      // AI-generated task representation update (stored in student override without altering notice)
+      const overrides = getStoredOverridesMap(currentStudent.id);
+      overrides[taskId] = {
+        ...overrides[taskId],
+        ...updates,
+        updatedAt: new Date().toISOString(),
+      };
+      setStoredOverridesMap(currentStudent.id, overrides);
+    }
+    setTaskVersion((v) => v + 1);
+  };
+
+  // 12. Delete Personal Task
+  const deletePersonalTask = (taskId: string) => {
+    if (!currentStudent) return;
+    const personalTasks = getStoredPersonalTasks(currentStudent.id);
+    const nextList = personalTasks.filter((t) => t.id !== taskId);
+    setStoredPersonalTasks(currentStudent.id, nextList);
+    setTaskVersion((v) => v + 1);
+  };
+
+  // 13. Remove AI Task from Student's Checklist
+  const removeAiTask = (taskId: string) => {
+    if (!currentStudent) return;
+    const overrides = getStoredOverridesMap(currentStudent.id);
+    overrides[taskId] = {
+      ...overrides[taskId],
+      isRemoved: true,
+      updatedAt: new Date().toISOString(),
+    };
+    setStoredOverridesMap(currentStudent.id, overrides);
+    setTaskVersion((v) => v + 1);
+  };
+
+  // 14. Priority Overrides (Section 10-13)
+  const setTaskQuadrantOverride = (taskId: string, quadrant: TaskQuadrant | null) => {
+    updateTask(taskId, { studentQuadrantOverride: quadrant });
+  };
+
+  const resetTaskQuadrantOverride = (taskId: string) => {
+    updateTask(taskId, { studentQuadrantOverride: null });
+  };
+
+  const setTaskImportanceOverride = (taskId: string, importance: StudentImportance | null) => {
+    updateTask(taskId, { studentImportanceOverride: importance });
+  };
+
+  // 15. Private Notes Management (Section 7-9 & 26)
+  const updateTaskPrivateNote = (taskId: string, note: string, useNoteForAI: boolean = true) => {
+    updateTask(taskId, { privateNote: note, useNoteForAI });
+  };
+
+  const applyAiContextSuggestion = (taskId: string, suggestion: TaskContextSuggestion) => {
+    const updates: Partial<PriorityTask> = {
+      aiContextSuggestion: {
+        ...suggestion,
+        applied: true,
+      },
+    };
+    if (suggestion.suggestedQuadrant) {
+      updates.studentQuadrantOverride = suggestion.suggestedQuadrant;
+    }
+    updateTask(taskId, updates);
+  };
+
+  // 16. Task Status (Section 22)
+  const setTaskStatus = (taskId: string, status: TaskStatus) => {
+    const isCompleted = status === "COMPLETED";
+    if (!currentStudent) return;
+
+    // Sync with completedTaskIds array
+    const key = `noticeiq_completed_tasks_${currentStudent.id}`;
+    const stored = localStorage.getItem(key);
+    const currentCompleted: string[] = stored ? JSON.parse(stored) : [];
+    let nextCompleted: string[] = [];
+
+    if (isCompleted && !currentCompleted.includes(taskId)) {
+      nextCompleted = [...currentCompleted, taskId];
+    } else if (!isCompleted && currentCompleted.includes(taskId)) {
+      nextCompleted = currentCompleted.filter((id) => id !== taskId);
+    } else {
+      nextCompleted = currentCompleted;
+    }
+
+    localStorage.setItem(key, JSON.stringify(nextCompleted));
+    setCompletedTaskIds(nextCompleted);
+
+    updateTask(taskId, {
+      status,
+      completedAt: isCompleted ? new Date().toISOString() : null,
+    });
+  };
+
+  // 17. Mark notice as read
   const markNoticeAsRead = (noticeId: string) => {
     if (!currentStudent || typeof window === "undefined") return;
     try {
@@ -376,7 +726,7 @@ export function useStudentAuth() {
     }
   };
 
-  // 10. Logout
+  // 18. Logout
   const logoutStudent = () => {
     setCurrentStudent(null);
     setStoredStudent(null);
@@ -387,6 +737,7 @@ export function useStudentAuth() {
     allStudents,
     isLoaded,
     completedTaskIds,
+    taskVersion,
     verifyCollegeDomain,
     verifyCollegeOtp,
     verifySchoolStudent,
@@ -396,12 +747,20 @@ export function useStudentAuth() {
     getStudentNoticesWithRelevance,
     getStudentNotices,
     getStudentPriorityTasks,
+    getTaskById,
+    addPersonalTask,
+    updateTask,
+    deletePersonalTask,
+    removeAiTask,
+    setTaskQuadrantOverride,
+    resetTaskQuadrantOverride,
+    setTaskImportanceOverride,
+    updateTaskPrivateNote,
+    applyAiContextSuggestion,
+    setTaskStatus,
     toggleTaskComplete,
     resetTaskCompletions,
     markNoticeAsRead,
     logoutStudent,
   };
 }
-
-
-

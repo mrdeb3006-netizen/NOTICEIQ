@@ -15,11 +15,14 @@ import {
   Megaphone,
   AlertTriangle,
   Check,
-  ListTodo,
+  Plus,
+  User,
+  Layers,
 } from "lucide-react";
 import { useStudentAuth, NoticeWithRelevance } from "@/lib/studentStore";
 import { PriorityBadge } from "@/components/student/PriorityBadge";
 import { NoticeModal } from "@/components/student/NoticeModal";
+import { AddTaskModal } from "@/components/student/AddTaskModal";
 
 export default function StudentDashboardPage() {
   const {
@@ -27,10 +30,12 @@ export default function StudentDashboardPage() {
     getStudentNoticesWithRelevance,
     getStudentPriorityTasks,
     toggleTaskComplete,
+    addPersonalTask,
   } = useStudentAuth();
 
   const [selectedNoticeForModal, setSelectedNoticeForModal] =
     useState<NoticeWithRelevance | null>(null);
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
 
   const allNoticesWithRel = getStudentNoticesWithRelevance();
   const allPriorityTasks = getStudentPriorityTasks();
@@ -42,14 +47,19 @@ export default function StudentDashboardPage() {
 
   // Active prioritized tasks (not completed)
   const activeTasks = allPriorityTasks.filter((t) => t.status !== "COMPLETED");
-  const q1Tasks = activeTasks.filter((t) => t.quadrant === "Q1");
-  const q2Tasks = activeTasks.filter((t) => t.quadrant === "Q2");
-  const q3Tasks = activeTasks.filter((t) => t.quadrant === "Q3");
-  const q4Tasks = activeTasks.filter((t) => t.quadrant === "Q4");
+  const q1Tasks = activeTasks.filter((t) => (t.finalQuadrant || t.quadrant) === "Q1");
+  const q2Tasks = activeTasks.filter((t) => (t.finalQuadrant || t.quadrant) === "Q2");
+  const q3Tasks = activeTasks.filter((t) => (t.finalQuadrant || t.quadrant) === "Q3");
+  const q4Tasks = activeTasks.filter((t) => (t.finalQuadrant || t.quadrant) === "Q4");
 
   // Top focus items (Q1 first, then Q2)
   const focusTodayTasks = [...q1Tasks, ...q2Tasks].slice(0, 3);
   const urgentCount = q1Tasks.length;
+
+  // Manual overrides count
+  const overriddenTasks = allPriorityTasks.filter(
+    (t) => !!t.studentQuadrantOverride && t.studentQuadrantOverride !== t.aiQuadrant
+  );
 
   const isCollege = currentStudent?.institutionType === "college" || !!currentStudent?.email;
 
@@ -62,13 +72,13 @@ export default function StudentDashboardPage() {
 
   const dashboardCards = [
     {
-      title: "Notices & Circulars",
-      icon: <Inbox className="w-6 h-6 text-indigo-600" />,
-      bgIcon: "bg-indigo-50",
-      description: "Official notices & personalized relevance scoring.",
-      subtext: `${relevantNotices.length} relevant circulars matching your cohort profile.`,
+      title: "My Actions & Tasks",
+      icon: <Zap className="w-6 h-6 text-violet-600" />,
+      bgIcon: "bg-violet-50",
+      description: "Manage notice actions and personal student goals.",
+      subtext: `${activeTasks.length} total active tasks (${allPriorityTasks.filter((t) => t.taskType === "PERSONAL").length} personal).`,
       status: "Live Active",
-      href: "/student/inbox",
+      href: "/student/actions",
     },
     {
       title: "Priority Matrix",
@@ -80,13 +90,13 @@ export default function StudentDashboardPage() {
       href: "/student/priority",
     },
     {
-      title: "My Actions",
-      icon: <Zap className="w-6 h-6 text-violet-600" />,
-      bgIcon: "bg-violet-50",
-      description: "Personalized task checklist derived from notices.",
-      subtext: `${activeTasks.length} total active tasks pending completion.`,
+      title: "Notices & Circulars",
+      icon: <Inbox className="w-6 h-6 text-indigo-600" />,
+      bgIcon: "bg-indigo-50",
+      description: "Official notices & personalized relevance scoring.",
+      subtext: `${relevantNotices.length} relevant circulars matching your cohort profile.`,
       status: "Live Active",
-      href: "/student/actions",
+      href: "/student/inbox",
     },
     {
       title: "Schedule",
@@ -94,7 +104,7 @@ export default function StudentDashboardPage() {
       bgIcon: "bg-emerald-50",
       description: "Adaptive study calendar & time blocks.",
       subtext: `Target window: ${currentStudent?.preferredStartTime || "6 PM"} – ${currentStudent?.preferredEndTime || "10 PM"}.`,
-      status: "Coming in Step 8",
+      status: "Coming in Step 9",
       href: "/student/schedule",
     },
   ];
@@ -105,34 +115,47 @@ export default function StudentDashboardPage() {
       <section className="p-6 sm:p-8 rounded-3xl bg-gradient-to-tr from-indigo-900 via-indigo-800 to-violet-950 text-white shadow-xl shadow-indigo-900/15 relative overflow-hidden text-left">
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-2xl space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-indigo-200 border border-white/15">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Verified Student Workspace</span>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="max-w-2xl space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-indigo-200 border border-white/15">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Verified Student Workspace</span>
+            </div>
+
+            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
+              Welcome, {currentStudent?.name || "Student"} 👋
+            </h2>
+
+            <div className="flex items-center gap-2 text-xs text-indigo-200 flex-wrap">
+              <span className="font-semibold text-white">
+                {currentStudent?.institutionName || "Future Institute of Engineering and Management"}
+              </span>
+              <span>•</span>
+              <span>
+                {isCollege
+                  ? `${currentStudent?.department || "CSE"} • ${currentStudent?.year || "1st Year"} • Section ${currentStudent?.section || "A"}`
+                  : `${currentStudent?.className || "Class 10"} • Section ${currentStudent?.section || "B"}`}
+              </span>
+              <span>•</span>
+              <span className="font-mono">Roll #{currentStudent?.rollNumber || "23"}</span>
+            </div>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-            Welcome, {currentStudent?.name || "Student"} 👋
-          </h2>
-
-          <div className="flex items-center gap-2 text-xs text-indigo-200 flex-wrap">
-            <span className="font-semibold text-white">
-              {currentStudent?.institutionName || "Future Institute of Engineering and Management"}
-            </span>
-            <span>•</span>
-            <span>
-              {isCollege
-                ? `${currentStudent?.department || "CSE"} • ${currentStudent?.year || "1st Year"} • Section ${currentStudent?.section || "A"}`
-                : `${currentStudent?.className || "Class 10"} • Section ${currentStudent?.section || "B"}`}
-            </span>
-            <span>•</span>
-            <span className="font-mono">Roll #{currentStudent?.rollNumber || "23"}</span>
+          <div className="self-start md:self-auto shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsAddTaskModalOpen(true)}
+              className="px-4 py-2.5 rounded-2xl bg-white text-indigo-900 hover:bg-indigo-50 font-bold text-xs shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus className="w-4 h-4 text-indigo-600" />
+              <span>+ Add Personal Task</span>
+            </button>
           </div>
         </div>
       </section>
 
       {/* ===================================================================== */}
-      {/* FOCUS TODAY SECTION (Step 7 Priority Engine Feature)                  */}
+      {/* FOCUS TODAY SECTION (Step 7 Priority Engine + Step 8 Student Control) */}
       {/* ===================================================================== */}
       <section className="space-y-4 text-left">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -154,37 +177,72 @@ export default function StudentDashboardPage() {
             <p className="text-xs text-slate-500 mt-0.5">
               {urgentCount > 0
                 ? `${urgentCount} action${urgentCount > 1 ? "s" : ""} need your immediate attention.`
-                : "Your top priorities prioritized automatically from notices."}
+                : "Top priorities prioritized automatically from notices and your personal goals."}
             </p>
           </div>
 
-          <Link
-            href="/student/priority"
-            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1 self-start sm:self-auto"
-          >
-            <span>Open Priority Matrix ({activeTasks.length} Active)</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+          <div className="flex items-center gap-2.5 self-start sm:self-auto">
+            <Link
+              href="/student/actions"
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1"
+            >
+              <span>My Actions ({activeTasks.length})</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
         </div>
+
+        {/* Override indicator if manual decisions exist */}
+        {overriddenTasks.length > 0 && (
+          <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-xs text-amber-950 flex items-center justify-between gap-2">
+            <span>
+              ✨ <strong>My decisions:</strong> You have manually prioritized {overriddenTasks.length} action{overriddenTasks.length > 1 ? "s" : ""}.
+            </span>
+            <Link href="/student/actions" className="text-[11px] font-bold text-amber-900 hover:underline">
+              View overrides →
+            </Link>
+          </div>
+        )}
 
         {focusTodayTasks.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
             {focusTodayTasks.map((task) => {
               const isBlocked = task.dependencies?.isBlocked;
               const isPrereq = task.dependencies?.isPrerequisiteForOthers;
+              const isPersonal = task.taskType === "PERSONAL";
+              const hasOverride = !!task.studentQuadrantOverride && task.studentQuadrantOverride !== task.aiQuadrant;
+
               return (
                 <div
                   key={task.id}
                   className={`p-4 rounded-2xl border transition-all flex flex-col justify-between space-y-3 relative group ${
-                    task.quadrant === "Q1"
+                    (task.finalQuadrant || task.quadrant) === "Q1"
                       ? "bg-rose-50/40 border-rose-200 hover:border-rose-400 hover:shadow-md"
                       : "bg-amber-50/40 border-amber-200 hover:border-amber-400 hover:shadow-md"
                   }`}
                 >
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-1.5">
-                      <PriorityBadge quadrant={task.quadrant} size="sm" />
-                      
+                    <div className="flex items-center justify-between gap-1.5 flex-wrap">
+                      <PriorityBadge quadrant={task.finalQuadrant || task.quadrant} size="sm" />
+
+                      {isPersonal ? (
+                        <span className="text-[9px] font-bold bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded border border-purple-200 flex items-center gap-1">
+                          <User className="w-2.5 h-2.5" />
+                          <span>Personal</span>
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-bold bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
+                          <Megaphone className="w-2.5 h-2.5" />
+                          <span>Notice</span>
+                        </span>
+                      )}
+
+                      {hasOverride && (
+                        <span className="text-[9px] font-extrabold bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded border border-amber-300">
+                          {task.studentQuadrantOverride}
+                        </span>
+                      )}
+
                       {isBlocked && (
                         <span className="text-[9px] font-extrabold bg-amber-100 text-amber-900 px-1.5 py-0.5 rounded border border-amber-200 flex items-center gap-1">
                           <AlertTriangle className="w-2.5 h-2.5" />
@@ -200,9 +258,12 @@ export default function StudentDashboardPage() {
                       )}
                     </div>
 
-                    <h4 className="text-xs font-bold text-slate-900 leading-snug line-clamp-2">
+                    <Link
+                      href={`/student/actions/${task.id}`}
+                      className="text-xs font-bold text-slate-900 leading-snug line-clamp-2 hover:text-indigo-600 transition-colors block"
+                    >
                       {task.title}
-                    </h4>
+                    </Link>
 
                     {task.dependencies?.blockedByTaskTitle && isBlocked && (
                       <p className="text-[10px] text-amber-800 font-medium">
@@ -378,7 +439,7 @@ export default function StudentDashboardPage() {
               </div>
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-                <span>Autonomous prioritization</span>
+                <span>Adaptive Prioritization</span>
                 <span className="text-indigo-600 font-bold flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                   <span>Explore</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -389,61 +450,15 @@ export default function StudentDashboardPage() {
         </div>
       </section>
 
-      {/* Student Focus & Preferences Summary */}
-      <section className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-4 text-left">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-slate-900">
-              Active Personal Preferences
-            </h3>
-            <p className="text-xs text-slate-500">
-              Your customized study schedule and academic focus areas.
-            </p>
-          </div>
-
-          <Link
-            href="/student/profile"
-            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline"
-          >
-            Edit Preferences →
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Focus Areas</span>
-            <div className="flex flex-wrap gap-1 pt-1">
-              {currentStudent?.interests && currentStudent.interests.length > 0 ? (
-                currentStudent.interests.map((tag) => (
-                  <span key={tag} className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[10px] font-semibold">
-                    {tag}
-                  </span>
-                ))
-              ) : (
-                <span className="text-xs text-slate-400">No focus areas set</span>
-              )}
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Study Hours</span>
-            <p className="text-xs font-bold text-slate-800">
-              {currentStudent?.preferredStartTime && currentStudent?.preferredEndTime
-                ? `${currentStudent.preferredStartTime} – ${currentStudent.preferredEndTime}`
-                : "6 PM – 10 PM"}
-            </p>
-            <span className="text-[10px] text-slate-400">Peak concentration block</span>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">Daily Allocation</span>
-            <p className="text-xs font-bold text-slate-800">
-              {currentStudent?.availableDailyHours || "2 hours / day"}
-            </p>
-            <span className="text-[10px] text-slate-400">Available execution window</span>
-          </div>
-        </div>
-      </section>
+      {/* Add Task Modal */}
+      <AddTaskModal
+        isOpen={isAddTaskModalOpen}
+        onClose={() => setIsAddTaskModalOpen(false)}
+        onSave={(data) => {
+          addPersonalTask(data);
+        }}
+        availableTasksForDependency={allPriorityTasks}
+      />
 
       {/* Notice Detail Modal */}
       <NoticeModal

@@ -68,12 +68,16 @@ export interface NoticeRelevance {
 }
 
 // ============================================================================
-// STEP 7: PRIORITY INTELLIGENCE ENGINE & TIME MANAGEMENT MATRIX TYPES
+// STEP 7 & 8: PRIORITY INTELLIGENCE ENGINE & STUDENT CONTROL TYPES
 // ============================================================================
 
 export type TaskQuadrant = "Q1" | "Q2" | "Q3" | "Q4";
 
 export type TaskStatus = "TODO" | "IN_PROGRESS" | "COMPLETED";
+
+export type TaskType = "AI_GENERATED" | "PERSONAL";
+
+export type StudentImportance = "LOW" | "MEDIUM" | "HIGH";
 
 export interface TaskDependencies {
   blockedByTaskId?: string;
@@ -84,12 +88,23 @@ export interface TaskDependencies {
   prerequisiteCompleted?: boolean;
 }
 
+export interface TaskContextSuggestion {
+  suggestion: string;
+  reason: string;
+  suggestedQuadrant?: TaskQuadrant;
+  confidence?: number;
+  applied?: boolean;
+  createdAt: string;
+}
+
 export interface PriorityTask {
   id: string;
   studentId: string;
-  noticeId: string;
-  noticeTitle: string;
+  noticeId?: string; // Optional for personal tasks
+  noticeTitle?: string;
   noticeCategory?: string;
+
+  taskType: TaskType;
 
   title: string;
   description?: string;
@@ -97,28 +112,47 @@ export interface PriorityTask {
   deadline?: string | null;
   estimatedMinutes?: number | null;
 
-  urgencyScore: number; // 0 to 100
+  // AI Calculated Scores & Reasons (Step 7)
+  urgencyScore: number; // 0 to 100 (alias for aiUrgencyScore)
   importanceScore: number; // 0 to 100
   consequenceScore: number; // 0 to 100
   relevanceScore: number; // 0 to 100
-
   priorityScore: number; // 0 to 100 (weighted sum)
-  quadrant: TaskQuadrant;
+  quadrant: TaskQuadrant; // Backwards compatible alias for finalQuadrant
+
+  aiUrgencyScore: number;
+  aiImportanceScore: number;
+  aiConsequenceScore: number;
+  aiRelevanceScore: number;
+  aiPriorityScore: number;
+  aiQuadrant: TaskQuadrant;
+  aiPriorityReasons: string[];
+
+  // Student Control Layer & Overrides (Step 8)
+  studentImportanceOverride?: StudentImportance | null;
+  studentPriorityOverride?: number | null;
+  studentQuadrantOverride?: TaskQuadrant | null;
+
+  // Final Resolved State (Student decision > AI recommendation)
+  finalPriorityScore: number;
+  finalQuadrant: TaskQuadrant;
 
   priorityReasons: string[];
   recommendedAction: string;
 
-  dependencies?: TaskDependencies;
+  // Private Student Notes & AI Context
+  privateNote?: string;
+  useNoteForAI?: boolean;
+  aiContextSuggestion?: TaskContextSuggestion | null;
 
+  // Lifecycle & Dependency State
+  dependencies?: TaskDependencies;
   status: TaskStatus;
+  isRemoved?: boolean; // If student removed an AI-generated notice action from their checklist
 
   createdAt: string;
   updatedAt: string;
   completedAt?: string | null;
-
-  // Extensibility for Step 8 / manual override (Student override > AI recommendation)
-  aiQuadrant?: TaskQuadrant;
-  studentQuadrantOverride?: TaskQuadrant | null;
 }
 
 export interface TaskPriorityResult {
@@ -132,5 +166,6 @@ export interface TaskPriorityResult {
   recommendedAction: string;
   isOverdue: boolean;
 }
+
 
 

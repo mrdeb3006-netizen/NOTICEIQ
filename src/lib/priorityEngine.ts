@@ -6,6 +6,7 @@ import {
   PriorityTask,
   TaskQuadrant,
   TaskStatus,
+  StudentImportance,
   TaskPriorityResult,
   TaskDependencies,
 } from "@/types/student";
@@ -556,19 +557,148 @@ export function calculateTaskPriority(
 }
 
 // ============================================================================
-// STUDENT TASK GENERATION & DEPENDENCY GRAPH RESOLVER
+// PERSONAL TASK PRIORITY CALCULATION
+// ============================================================================
+
+export function calculatePersonalTaskPriority(
+  task: {
+    title: string;
+    description?: string;
+    deadline?: string | null;
+    studentImportanceOverride?: StudentImportance | null;
+  },
+  _student: StudentProfile,
+  dependenciesContext?: {
+    isBlocked?: boolean;
+    blockedByTitle?: string;
+    isPrerequisite?: boolean;
+    blocksTitle?: string;
+    prerequisiteCompleted?: boolean;
+  },
+  customNow?: Date
+): TaskPriorityResult {
+  // 1. Urgency Score (0-100)
+  const urgencyRes = calculateUrgency(task.deadline, customNow);
+  let urgencyScore = urgencyRes.score;
+
+  // 2. Importance Score (0-100)
+  let importanceScore = 60; // default medium
+  let importanceReason = "Personal student goal";
+  if (task.studentImportanceOverride === "HIGH") {
+    importanceScore = 85;
+    importanceReason = "Marked as HIGH importance by you";
+  } else if (task.studentImportanceOverride === "LOW") {
+    importanceScore = 35;
+    importanceReason = "Marked as LOW importance by you";
+  } else if (task.studentImportanceOverride === "MEDIUM") {
+    importanceScore = 60;
+    importanceReason = "Marked as MEDIUM importance by you";
+  } else {
+    // Heuristics on title
+    const tLower = task.title.toLowerCase();
+    if (
+      tLower.includes("exam") ||
+      tLower.includes("submit") ||
+      tLower.includes("scholarship") ||
+      tLower.includes("presentation") ||
+      tLower.includes("interview") ||
+      tLower.includes("project")
+    ) {
+      importanceScore = 80;
+      importanceReason = "Critical personal deadline or academic milestone";
+    }
+  }
+
+  // 3. Consequence Score (0-100)
+  let consequenceScore = 50;
+  if (importanceScore >= 80) consequenceScore = 75;
+  else if (importanceScore <= 40) consequenceScore = 30;
+
+  // 4. Relevance Score (100% since personal task)
+  const relevanceScore = 100;
+
+  // 5. Dependency adjustment
+  if (dependenciesContext?.isPrerequisite && !dependenciesContext.prerequisiteCompleted) {
+    urgencyScore = Math.min(100, urgencyScore + 5);
+    importanceScore = Math.min(100, importanceScore + 5);
+  }
+
+  // 6. Weighted Priority Score
+  const rawPriorityScore =
+    urgencyScore * PRIORITY_WEIGHTS.urgency +
+    importanceScore * PRIORITY_WEIGHTS.importance +
+    consequenceScore * PRIORITY_WEIGHTS.consequence +
+    relevanceScore * PRIORITY_WEIGHTS.relevance;
+
+  const priorityScore = Math.min(100, Math.max(0, Math.round(rawPriorityScore)));
+
+  // 7. Quadrant Calculation
+  let quadrant: TaskQuadrant = "Q4";
+  if (urgencyScore >= PRIORITY_THRESHOLD && importanceScore >= PRIORITY_THRESHOLD) {
+    quadrant = "Q1";
+  } else if (urgencyScore < PRIORITY_THRESHOLD && importanceScore >= PRIORITY_THRESHOLD) {
+    quadrant = "Q2";
+  } else if (urgencyScore >= PRIORITY_THRESHOLD && importanceScore < PRIORITY_THRESHOLD) {
+    quadrant = "Q3";
+  } else {
+    quadrant = "Q4";
+  }
+
+  // 8. Explainable Reasons List
+  const reasons: string[] = [];
+  reasons.push(urgencyRes.reason);
+  reasons.push(`• ${importanceReason}.`);
+  reasons.push("• Personal task created directly by you.");
+
+  if (dependenciesContext?.isBlocked && dependenciesContext.blockedByTitle) {
+    reasons.push(`⚠ BLOCKING PREREQUISITE: "${dependenciesContext.blockedByTitle}" must be completed first.`);
+  } else if (dependenciesContext?.prerequisiteCompleted && dependenciesContext.blockedByTitle) {
+    reasons.push(`✓ Prerequisite "${dependenciesContext.blockedByTitle}" has been completed.`);
+  } else if (dependenciesContext?.isPrerequisite && dependenciesContext.blocksTitle) {
+    reasons.push(`⚡ Required prerequisite for "${dependenciesContext.blocksTitle}".`);
+  }
+
+  let recommendedAction = "";
+  if (quadrant === "Q1") {
+    recommendedAction = "High urgency & importance — complete today.";
+  } else if (quadrant === "Q2") {
+    recommendedAction = "Important goal — schedule time in your study block.";
+  } else if (quadrant === "Q3") {
+    recommendedAction = "Handle quickly or take care of during free time.";
+  } else {
+    recommendedAction = "Complete at your leisure.";
+  }
+
+  return {
+    quadrant,
+    urgencyScore: Math.round(urgencyScore),
+    importanceScore: Math.round(importanceScore),
+    consequenceScore: Math.round(consequenceScore),
+    relevanceScore: Math.round(relevanceScore),
+    priorityScore,
+    reasons,
+    recommendedAction,
+    isOverdue: urgencyRes.isOverdue,
+  };
+}
+
+// ============================================================================
+// STUDENT TASK GENERATION & DEPENDENCY GRAPH RESOLVER (STEP 7 & STEP 8)
 // ============================================================================
 
 /**
- * Generates and prioritizes all active tasks for a given student from their notices.
+ * Generates and prioritizes all active tasks for a given student.
+ * Combines AI-generated notice tasks and Personal tasks.
+ * Applies student overrides, private notes, and custom titles.
  * Resolves dependency chains dynamically.
- * Filters out tasks from NOT_RELEVANT notices.
  */
 export function generateStudentPriorityTasks(
   student: StudentProfile,
   noticesWithRelevance: Array<Notice & { relevance: NoticeRelevance }>,
   completedTaskIds: string[] = [],
-  customNow?: Date
+  customNow?: Date,
+  customOverridesMap: Record<string, Partial<PriorityTask>> = {},
+  personalTasksList: PriorityTask[] = []
 ): PriorityTask[] {
   const priorityTasks: PriorityTask[] = [];
 
@@ -577,7 +707,7 @@ export function generateStudentPriorityTasks(
     (n) => n.relevance.relevance === "HIGH" || n.relevance.relevance === "MEDIUM"
   );
 
-  // 1. First pass: Collect all raw tasks and build dependency lookups
+  // 1. Process AI-Generated Notice Tasks
   relevantNotices.forEach((notice) => {
     const rawTasks = notice.relevance.personalizedTasks || [];
     const dependencies: NoticeAiDependency[] =
@@ -585,26 +715,37 @@ export function generateStudentPriorityTasks(
 
     rawTasks.forEach((t, idx) => {
       const taskId = t.id || `task_${notice.id}_${student.id}_${idx + 1}`;
-      const isCompleted = completedTaskIds.includes(taskId);
-      const status: TaskStatus = isCompleted ? "COMPLETED" : "TODO";
+      const override = customOverridesMap[taskId] || {};
 
-      // Detect dependencies for this task
-      let blockedByTitle: string | undefined;
-      let blockedByTaskId: string | undefined;
+      // If student chose "Remove from My Actions"
+      if (override.isRemoved) {
+        return;
+      }
+
+      const effectiveTitle = override.title || t.title;
+      const effectiveDescription = override.description !== undefined ? override.description : t.description;
+      const effectiveDeadline = override.deadline !== undefined ? override.deadline : (t.deadline || notice.deadline);
+      const effectiveEstimatedMinutes = override.estimatedMinutes || t.estimatedMinutes || 30;
+
+      const isCompleted = completedTaskIds.includes(taskId) || override.status === "COMPLETED";
+      const status: TaskStatus = isCompleted ? "COMPLETED" : (override.status || "TODO");
+
+      // Dependency lookup
+      let blockedByTitle: string | undefined = override.dependencies?.blockedByTaskTitle;
+      let blockedByTaskId: string | undefined = override.dependencies?.blockedByTaskId;
       let isBlocked = false;
       let prerequisiteCompleted = false;
 
-      // Check if this task is blocked by another task
       const depMatch = dependencies.find(
         (d) =>
+          normalizeTaskName(d.blocked_task) === normalizeTaskName(effectiveTitle) ||
           normalizeTaskName(d.blocked_task) === normalizeTaskName(t.title) ||
           normalizeTaskName(d.blocked_task) === normalizeTaskName(t.sourceTask || "") ||
-          t.title.toLowerCase().includes(d.blocked_task.toLowerCase())
+          effectiveTitle.toLowerCase().includes(d.blocked_task.toLowerCase())
       );
 
       if (depMatch) {
         blockedByTitle = depMatch.required_task;
-        // Find matching task object in notice
         const reqTask = rawTasks.find(
           (rt) =>
             normalizeTaskName(rt.title) === normalizeTaskName(depMatch.required_task) ||
@@ -613,7 +754,7 @@ export function generateStudentPriorityTasks(
         );
         if (reqTask) {
           blockedByTaskId = reqTask.id;
-          const reqCompleted = completedTaskIds.includes(reqTask.id);
+          const reqCompleted = completedTaskIds.includes(reqTask.id) || customOverridesMap[reqTask.id]?.status === "COMPLETED";
           prerequisiteCompleted = reqCompleted;
           isBlocked = !reqCompleted;
         } else {
@@ -621,12 +762,13 @@ export function generateStudentPriorityTasks(
         }
       }
 
-      // Check if this task blocks other tasks
+      // Check if this task blocks others
       const blocksMatch = dependencies.filter(
         (d) =>
+          normalizeTaskName(d.required_task) === normalizeTaskName(effectiveTitle) ||
           normalizeTaskName(d.required_task) === normalizeTaskName(t.title) ||
           normalizeTaskName(d.required_task) === normalizeTaskName(t.sourceTask || "") ||
-          t.title.toLowerCase().includes(d.required_task.toLowerCase())
+          effectiveTitle.toLowerCase().includes(d.required_task.toLowerCase())
       );
 
       const isPrerequisiteForOthers = blocksMatch.length > 0;
@@ -641,12 +783,12 @@ export function generateStudentPriorityTasks(
         prerequisiteCompleted,
       };
 
-      // 2. Calculate priority scores
-      const priorityResult = calculateTaskPriority(
+      // Calculate AI Recommendation
+      const aiPriorityResult = calculateTaskPriority(
         {
-          title: t.title,
-          description: t.description,
-          deadline: t.deadline || notice.deadline,
+          title: effectiveTitle,
+          description: effectiveDescription,
+          deadline: effectiveDeadline,
         },
         notice,
         notice.relevance,
@@ -661,32 +803,133 @@ export function generateStudentPriorityTasks(
         customNow
       );
 
+      // Student Overrides (Student decision > AI recommendation)
+      const studentQuadrantOverride = override.studentQuadrantOverride !== undefined ? override.studentQuadrantOverride : null;
+      const studentPriorityOverride = override.studentPriorityOverride !== undefined ? override.studentPriorityOverride : null;
+      const studentImportanceOverride = override.studentImportanceOverride !== undefined ? override.studentImportanceOverride : null;
+
+      const finalQuadrant = studentQuadrantOverride || aiPriorityResult.quadrant;
+      const finalPriorityScore =
+        studentPriorityOverride !== null && studentPriorityOverride !== undefined
+          ? studentPriorityOverride
+          : aiPriorityResult.priorityScore;
+
       priorityTasks.push({
         id: taskId,
         studentId: student.id,
         noticeId: notice.id,
         noticeTitle: notice.title,
         noticeCategory: notice.category,
-        title: t.title,
-        description: t.description,
-        deadline: t.deadline || notice.deadline || null,
-        estimatedMinutes: t.estimatedMinutes || 30,
-        urgencyScore: priorityResult.urgencyScore,
-        importanceScore: priorityResult.importanceScore,
-        consequenceScore: priorityResult.consequenceScore,
-        relevanceScore: priorityResult.relevanceScore,
-        priorityScore: priorityResult.priorityScore,
-        quadrant: priorityResult.quadrant,
-        priorityReasons: priorityResult.reasons,
-        recommendedAction: priorityResult.recommendedAction,
+        taskType: "AI_GENERATED",
+        title: effectiveTitle,
+        description: effectiveDescription,
+        deadline: effectiveDeadline || null,
+        estimatedMinutes: effectiveEstimatedMinutes,
+        
+        // AI Calculated values
+        aiUrgencyScore: aiPriorityResult.urgencyScore,
+        aiImportanceScore: aiPriorityResult.importanceScore,
+        aiConsequenceScore: aiPriorityResult.consequenceScore,
+        aiRelevanceScore: aiPriorityResult.relevanceScore,
+        aiPriorityScore: aiPriorityResult.priorityScore,
+        aiQuadrant: aiPriorityResult.quadrant,
+        aiPriorityReasons: aiPriorityResult.reasons,
+
+        // Student Overrides
+        studentImportanceOverride,
+        studentPriorityOverride,
+        studentQuadrantOverride,
+
+        // Final Resolved
+        finalPriorityScore,
+        finalQuadrant,
+
+        // Aliases for compatibility
+        urgencyScore: aiPriorityResult.urgencyScore,
+        importanceScore: aiPriorityResult.importanceScore,
+        consequenceScore: aiPriorityResult.consequenceScore,
+        relevanceScore: aiPriorityResult.relevanceScore,
+        priorityScore: finalPriorityScore,
+        quadrant: finalQuadrant,
+
+        priorityReasons: aiPriorityResult.reasons,
+        recommendedAction: aiPriorityResult.recommendedAction,
+
+        // Private Notes & AI Context
+        privateNote: override.privateNote,
+        useNoteForAI: override.useNoteForAI !== undefined ? override.useNoteForAI : true,
+        aiContextSuggestion: override.aiContextSuggestion || null,
+
         dependencies: taskDeps,
         status,
+        isRemoved: false,
         createdAt: notice.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        completedAt: isCompleted ? new Date().toISOString() : null,
-        aiQuadrant: priorityResult.quadrant,
-        studentQuadrantOverride: null,
+        updatedAt: override.updatedAt || new Date().toISOString(),
+        completedAt: isCompleted ? (override.completedAt || new Date().toISOString()) : null,
       });
+    });
+  });
+
+  // 2. Process Personal Tasks (Created Directly by Student)
+  personalTasksList.forEach((pt) => {
+    if (pt.isRemoved) return;
+
+    const isCompleted = completedTaskIds.includes(pt.id) || pt.status === "COMPLETED";
+    const status: TaskStatus = isCompleted ? "COMPLETED" : (pt.status || "TODO");
+
+    // Evaluate Personal Task Priority
+    const aiPriorityResult = calculatePersonalTaskPriority(
+      {
+        title: pt.title,
+        description: pt.description,
+        deadline: pt.deadline,
+        studentImportanceOverride: pt.studentImportanceOverride,
+      },
+      student,
+      {
+        isBlocked: pt.dependencies?.isBlocked,
+        blockedByTitle: pt.dependencies?.blockedByTaskTitle,
+        isPrerequisite: pt.dependencies?.isPrerequisiteForOthers,
+        blocksTitle: pt.dependencies?.blocksTaskTitles?.[0],
+        prerequisiteCompleted: pt.dependencies?.prerequisiteCompleted,
+      },
+      customNow
+    );
+
+    const studentQuadrantOverride = pt.studentQuadrantOverride !== undefined ? pt.studentQuadrantOverride : null;
+    const studentPriorityOverride = pt.studentPriorityOverride !== undefined ? pt.studentPriorityOverride : null;
+
+    const finalQuadrant = studentQuadrantOverride || aiPriorityResult.quadrant;
+    const finalPriorityScore =
+      studentPriorityOverride !== null && studentPriorityOverride !== undefined
+        ? studentPriorityOverride
+        : aiPriorityResult.priorityScore;
+
+    priorityTasks.push({
+      ...pt,
+      taskType: "PERSONAL",
+      status,
+      aiUrgencyScore: aiPriorityResult.urgencyScore,
+      aiImportanceScore: aiPriorityResult.importanceScore,
+      aiConsequenceScore: aiPriorityResult.consequenceScore,
+      aiRelevanceScore: 100,
+      aiPriorityScore: aiPriorityResult.priorityScore,
+      aiQuadrant: aiPriorityResult.quadrant,
+      aiPriorityReasons: aiPriorityResult.reasons,
+
+      finalPriorityScore,
+      finalQuadrant,
+
+      urgencyScore: aiPriorityResult.urgencyScore,
+      importanceScore: aiPriorityResult.importanceScore,
+      consequenceScore: aiPriorityResult.consequenceScore,
+      relevanceScore: 100,
+      priorityScore: finalPriorityScore,
+      quadrant: finalQuadrant,
+
+      priorityReasons: aiPriorityResult.reasons,
+      recommendedAction: aiPriorityResult.recommendedAction,
+      completedAt: isCompleted ? (pt.completedAt || new Date().toISOString()) : null,
     });
   });
 
@@ -736,6 +979,7 @@ export function sortPriorityTasks(tasks: PriorityTask[]): PriorityTask[] {
     }
 
     // 3. Priority score (descending)
-    return b.priorityScore - a.priorityScore;
+    return b.finalPriorityScore - a.finalPriorityScore;
   });
 }
+
