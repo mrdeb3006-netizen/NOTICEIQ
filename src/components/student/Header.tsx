@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useStudentAuth } from "@/lib/studentStore";
+import { formatRelativeTime } from "@/lib/notifications/reminderEngine";
 
 interface HeaderProps {
   onOpenMobileMenu: () => void;
@@ -23,9 +24,22 @@ export const StudentHeader: React.FC<HeaderProps> = ({
   title,
   subtitle = "Your personalized priority feed and action schedule.",
 }) => {
-  const { currentStudent, allStudents, switchStudentPersona } = useStudentAuth();
+  const {
+    currentStudent,
+    allStudents,
+    switchStudentPersona,
+    getStudentNotifications,
+    getUnreadNotificationCount,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+  } = useStudentAuth();
+
   const [showNotifications, setShowNotifications] = useState(false);
   const [showPersonaMenu, setShowPersonaMenu] = useState(false);
+
+  const notifications = getStudentNotifications();
+  const unreadCount = getUnreadNotificationCount();
+  const recentNotifications = notifications.slice(0, 6);
 
   const studentName = currentStudent?.name?.split(" ")[0] || "Student";
   const displayTitle = title || `Welcome, ${studentName} 👋`;
@@ -136,7 +150,7 @@ export const StudentHeader: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Notifications Button */}
+          {/* Notifications Bell & Dropdown */}
           <div className="relative">
             <button
               type="button"
@@ -145,7 +159,11 @@ export const StudentHeader: React.FC<HeaderProps> = ({
               aria-label="Notifications"
             >
               <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-indigo-600 ring-2 ring-white" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white font-extrabold text-[10px] flex items-center justify-center ring-2 ring-white shadow-xs animate-in zoom-in-50">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
             </button>
 
             {showNotifications && (
@@ -154,23 +172,82 @@ export const StudentHeader: React.FC<HeaderProps> = ({
                   className="fixed inset-0 z-40"
                   onClick={() => setShowNotifications(false)}
                 />
-                <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-white border border-slate-200 shadow-xl z-50 p-4 space-y-3 animate-in fade-in zoom-in-95 text-left">
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-3xl bg-white border border-slate-200 shadow-2xl z-50 p-4 space-y-3 animate-in fade-in zoom-in-95 text-left">
                   <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <span className="font-bold text-xs text-slate-900">Student Alerts</span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-600 font-bold">
-                      2 updates
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-extrabold text-xs text-slate-900">Notifications</span>
+                      {unreadCount > 0 && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 font-bold border border-rose-200">
+                          {unreadCount} unread
+                        </span>
+                      )}
+                    </div>
+                    {unreadCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => markAllNotificationsAsRead()}
+                        className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800"
+                      >
+                        Mark all read
+                      </button>
+                    )}
                   </div>
 
-                  <div className="space-y-2 text-xs">
-                    <div className="p-3 rounded-xl bg-indigo-50/50 border border-indigo-100 text-left">
-                      <span className="font-bold text-slate-900 block text-xs">Scholarship Application</span>
-                      <p className="text-[11px] text-slate-600 mt-0.5">Deadline approaching in 6 days for 1st Year CSE.</p>
-                    </div>
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-left">
-                      <span className="font-bold text-slate-900 block text-xs">Coding Club Orientation</span>
-                      <p className="text-[11px] text-slate-600 mt-0.5">Registration is open for Hackathon 2026.</p>
-                    </div>
+                  <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                    {recentNotifications.length > 0 ? (
+                      recentNotifications.map((notif) => (
+                        <Link
+                          key={notif.id}
+                          href={notif.actionUrl || "/student/notifications"}
+                          onClick={() => {
+                            markNotificationAsRead(notif.id);
+                            setShowNotifications(false);
+                          }}
+                          className={`p-3 rounded-2xl border block transition-all hover:bg-slate-50 ${
+                            !notif.isRead
+                              ? "bg-indigo-50/40 border-indigo-100 ring-1 ring-indigo-200/50"
+                              : "bg-slate-50/50 border-slate-100 opacity-80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span
+                              className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase ${
+                                notif.priority === "HIGH"
+                                  ? "bg-rose-100 text-rose-700"
+                                  : notif.priority === "MEDIUM"
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-slate-200 text-slate-700"
+                              }`}
+                            >
+                              {notif.priority}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-medium">
+                              {formatRelativeTime(notif.createdAt)}
+                            </span>
+                          </div>
+                          <span className="font-bold text-slate-900 block text-xs">
+                            {notif.title}
+                          </span>
+                          <p className="text-[11px] text-slate-600 mt-0.5 line-clamp-2">
+                            {notif.message}
+                          </p>
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="p-6 text-center text-slate-400 text-xs">
+                        No notifications yet. You&apos;re all caught up!
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 text-center">
+                    <Link
+                      href="/student/notifications"
+                      onClick={() => setShowNotifications(false)}
+                      className="text-xs font-bold text-indigo-600 hover:text-indigo-800 block py-1"
+                    >
+                      View All Notifications →
+                    </Link>
                   </div>
                 </div>
               </>

@@ -499,6 +499,7 @@ export function generateSchedule(
 
         scheduledTaskDates[task.id] = {
           dateStr: nextPlan.date,
+          dayIndex: dayIdx + 1,
           endMinutesFromMidnight: endH2 * 60 + endM2,
         };
         completedDependencies.add(task.id);

@@ -1,3 +1,5 @@
+import { Notice } from "./institution";
+
 export type StudentAccessType = "COLLEGE_EMAIL" | "SCHOOL_STUDENT_ID";
 
 export interface StudentProfile {
@@ -65,6 +67,10 @@ export interface NoticeRelevance {
   analyzedByAi?: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface NoticeWithRelevance extends Notice {
+  relevance: NoticeRelevance;
 }
 
 // ============================================================================
@@ -234,6 +240,51 @@ export interface ScheduleGenerationResult {
   conflicts: string[];
 }
 
+// ============================================================================
+// STEP 10: SMART NOTIFICATIONS & REMINDER ENGINE TYPES
+// ============================================================================
 
+export type NotificationType =
+  | "NOTICE_RECEIVED"
+  | "DEADLINE_APPROACHING"
+  | "TASK_DUE_SOON"
+  | "TASK_OVERDUE"
+  | "SCHEDULED_TASK"
+  | "DEPENDENCY_BLOCKED"
+  | "PRIORITY_CHANGED"
+  | "NOTICE_UPDATED"
+  | "SCHEDULE_CONFLICT"
+  | "PLAN_UPDATED"
+  | "TASK_COMPLETED"
+  | "SYSTEM";
 
+export type NotificationPriority = "HIGH" | "MEDIUM" | "LOW";
 
+export interface StudentNotification {
+  id: string;
+  studentId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  taskId?: string;
+  noticeId?: string;
+  priority: NotificationPriority;
+  isRead: boolean;
+  createdAt: string;
+  readAt?: string | null;
+  actionUrl: string;
+  deduplicationKey: string;
+  badgeLabel?: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface StudentNotificationPreferences {
+  studentId: string;
+  deadlineReminders: boolean;
+  scheduledTaskReminders: boolean;
+  noticeUpdates: boolean;
+  dependencyAlerts: boolean;
+  importantAlerts: boolean;
+  quietHoursStart: string; // e.g. "22:00"
+  quietHoursEnd: string;   // e.g. "07:00"
+}

@@ -18,6 +18,10 @@ import {
   Plus,
   User,
   Layers,
+  Bell,
+  Play,
+  Flame,
+  AlertOctagon,
 } from "lucide-react";
 import { useStudentAuth, NoticeWithRelevance } from "@/lib/studentStore";
 import { PriorityBadge } from "@/components/student/PriorityBadge";
@@ -29,6 +33,8 @@ export default function StudentDashboardPage() {
     currentStudent,
     getStudentNoticesWithRelevance,
     getStudentPriorityTasks,
+    getStudentSchedule,
+    getStudentNotifications,
     toggleTaskComplete,
     addPersonalTask,
   } = useStudentAuth();
@@ -39,6 +45,8 @@ export default function StudentDashboardPage() {
 
   const allNoticesWithRel = getStudentNoticesWithRelevance();
   const allPriorityTasks = getStudentPriorityTasks();
+  const scheduleResult = getStudentSchedule(7);
+  const notifications = getStudentNotifications();
 
   // Filter only relevant notices for the dashboard feed
   const relevantNotices = allNoticesWithRel.filter(
@@ -55,6 +63,18 @@ export default function StudentDashboardPage() {
   // Top focus items (Q1 first, then Q2)
   const focusTodayTasks = [...q1Tasks, ...q2Tasks].slice(0, 3);
   const urgentCount = q1Tasks.length;
+
+  // Next upcoming action from schedule engine
+  const nextScheduledItem = scheduleResult.nextActionItem;
+  const todayPlannedCount = scheduleResult.dailyPlans[0]?.items?.length || 0;
+
+  // Attention metric calculations
+  const approachingDeadlineCount = notifications.filter(
+    (n) => n.type === "DEADLINE_APPROACHING" || n.type === "TASK_OVERDUE"
+  ).length;
+  const blockedTasksCount = notifications.filter(
+    (n) => n.type === "DEPENDENCY_BLOCKED"
+  ).length;
 
   // Manual overrides count
   const overriddenTasks = allPriorityTasks.filter(
@@ -90,6 +110,15 @@ export default function StudentDashboardPage() {
       href: "/student/priority",
     },
     {
+      title: "Schedule",
+      icon: <Calendar className="w-6 h-6 text-emerald-600" />,
+      bgIcon: "bg-emerald-50",
+      description: "Deterministic time-blocking & weekly plan.",
+      subtext: `Target window: ${currentStudent?.preferredStartTime || "6 PM"} – ${currentStudent?.preferredEndTime || "10 PM"}.`,
+      status: "Live Active",
+      href: "/student/schedule",
+    },
+    {
       title: "Notices & Circulars",
       icon: <Inbox className="w-6 h-6 text-indigo-600" />,
       bgIcon: "bg-indigo-50",
@@ -97,15 +126,6 @@ export default function StudentDashboardPage() {
       subtext: `${relevantNotices.length} relevant circulars matching your cohort profile.`,
       status: "Live Active",
       href: "/student/inbox",
-    },
-    {
-      title: "Schedule",
-      icon: <Calendar className="w-6 h-6 text-emerald-600" />,
-      bgIcon: "bg-emerald-50",
-      description: "Adaptive study calendar & time blocks.",
-      subtext: `Target window: ${currentStudent?.preferredStartTime || "6 PM"} – ${currentStudent?.preferredEndTime || "10 PM"}.`,
-      status: "Coming in Step 9",
-      href: "/student/schedule",
     },
   ];
 
@@ -141,17 +161,127 @@ export default function StudentDashboardPage() {
             </div>
           </div>
 
-          <div className="self-start md:self-auto shrink-0">
+          <div className="self-start md:self-auto shrink-0 flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsAddTaskModalOpen(true)}
               className="px-4 py-2.5 rounded-2xl bg-white text-indigo-900 hover:bg-indigo-50 font-bold text-xs shadow-lg transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4 text-indigo-600" />
-              <span>+ Add Personal Task</span>
+              <span>+ Add Task</span>
             </button>
           </div>
         </div>
+      </section>
+
+      {/* ===================================================================== */}
+      {/* ATTENTION & UP NEXT ROW (Step 10 Notification Engine Integration)     */}
+      {/* ===================================================================== */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 text-left">
+        {/* ATTENTION BANNER (2 cols) */}
+        <div className="lg:col-span-2 p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex flex-col justify-between space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">
+                ATTENTION & REMINDERS
+              </h3>
+            </div>
+            <Link
+              href="/student/notifications"
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1"
+            >
+              <span>View Notifications</span>
+              <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="p-3 rounded-2xl bg-rose-50/70 border border-rose-100 flex items-center gap-2.5">
+              <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
+              <div>
+                <span className="text-xs font-extrabold text-slate-900 block">
+                  {approachingDeadlineCount > 0 ? `${approachingDeadlineCount} Deadlines` : "0 Urgent"}
+                </span>
+                <span className="text-[10px] text-rose-700 font-semibold">
+                  {approachingDeadlineCount > 0 ? "Due today or near" : "No overdue tasks"}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-100 flex items-center gap-2.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <div>
+                <span className="text-xs font-extrabold text-slate-900 block">
+                  {blockedTasksCount > 0 ? `${blockedTasksCount} Blocked` : "0 Blocked"}
+                </span>
+                <span className="text-[10px] text-amber-800 font-semibold">
+                  {blockedTasksCount > 0 ? "Requires prerequisite" : "All dependencies clear"}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex items-center gap-2.5">
+              <Calendar className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+              <div>
+                <span className="text-xs font-extrabold text-slate-900 block">
+                  {todayPlannedCount} Planned Today
+                </span>
+                <span className="text-[10px] text-indigo-700 font-semibold">
+                  In your evening slot
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* UP NEXT HERO CARD (1 col) */}
+        {nextScheduledItem ? (
+          <div className="p-5 rounded-3xl bg-gradient-to-br from-slate-900 to-indigo-950 text-white shadow-md flex flex-col justify-between space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1">
+                <Flame className="w-3 h-3 text-rose-400" />
+                UP NEXT
+              </span>
+              <span className="text-[11px] font-mono text-indigo-200">
+                {nextScheduledItem.startTime} ({nextScheduledItem.durationMinutes}m)
+              </span>
+            </div>
+
+            <div>
+              <h4 className="text-sm font-extrabold text-white line-clamp-1">
+                {nextScheduledItem.taskTitle}
+              </h4>
+              <p className="text-[11px] text-indigo-200/80 mt-0.5 line-clamp-1">
+                {nextScheduledItem.whyScheduledHere}
+              </p>
+            </div>
+
+            <Link
+              href="/student/schedule"
+              className="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <Play className="w-3.5 h-3.5 fill-white" />
+              <span>Start Focus</span>
+            </Link>
+          </div>
+        ) : (
+          <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs flex flex-col justify-between space-y-2 text-center">
+            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mt-1">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900">Up Next is clear</h4>
+              <p className="text-[11px] text-slate-500">No active tasks scheduled for today.</p>
+            </div>
+            <Link
+              href="/student/schedule"
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
+            >
+              Open Schedule →
+            </Link>
+          </div>
+        )}
       </section>
 
       {/* ===================================================================== */}

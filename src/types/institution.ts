@@ -174,6 +174,7 @@ export interface Notice {
   createdBy?: string;
   createdAt: string;
   publishedAt?: string;
+  updatedAt?: string;
 
   // AI Notice Understanding Engine Fields (Step 5)
   aiAnalysisStatus?: NoticeAiAnalysisStatus;

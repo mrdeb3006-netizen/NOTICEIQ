@@ -9,6 +9,7 @@ import {
   Zap,
   Target,
   Calendar,
+  Bell,
   FileText,
   BarChart2,
   User,
@@ -26,7 +27,8 @@ interface SidebarProps {
 
 export const StudentSidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
   const pathname = usePathname();
-  const { currentStudent, logoutStudent } = useStudentAuth();
+  const { currentStudent, logoutStudent, getUnreadNotificationCount } = useStudentAuth();
+  const unreadCount = getUnreadNotificationCount();
 
   const navItems = [
     {
@@ -56,6 +58,12 @@ export const StudentSidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
       href: "/student/schedule",
       icon: <Calendar className="w-4 h-4" />,
       badge: "Smart",
+    },
+    {
+      label: "Notifications",
+      href: "/student/notifications",
+      icon: <Bell className="w-4 h-4" />,
+      badge: unreadCount > 0 ? `${unreadCount}` : undefined,
     },
     {
       label: "Notices",

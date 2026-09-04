@@ -15,6 +15,8 @@ import {
   DailyPlan,
   ScheduleItemStatus,
   ScheduleGenerationResult,
+  StudentNotification,
+  StudentNotificationPreferences,
 } from "@/types/student";
 import { Institution, Notice } from "@/types/institution";
 import {
@@ -31,6 +33,10 @@ import {
 } from "./relevanceEngine";
 import { generateStudentPriorityTasks } from "./priorityEngine";
 import { generateSchedule } from "./scheduling/scheduleEngine";
+import {
+  syncAndDeduplicateAllNotifications,
+  DEFAULT_NOTIFICATION_PREFERENCES,
+} from "./notifications/reminderEngine";
 
 const CURRENT_STUDENT_KEY = "noticeiq_current_student";
 const ALL_STUDENT_PROFILES_KEY = "noticeiq_student_profiles";
@@ -889,6 +895,165 @@ export function useStudentAuth() {
     return getStudentSchedule(dateRangeDays);
   };
 
+  // ============================================================================
+  // STEP 10: SMART NOTIFICATIONS & REMINDERS STORE
+  // ============================================================================
+
+  const getStoredNotifications = useCallback(
+    (studentId: string): StudentNotification[] => {
+      if (typeof window === "undefined") return [];
+      try {
+        const key = `noticeiq_student_notifications_${studentId}`;
+        const stored = localStorage.getItem(key);
+        return stored ? JSON.parse(stored) : [];
+      } catch {
+        return [];
+      }
+    },
+    []
+  );
+
+  const setStoredNotifications = useCallback(
+    (studentId: string, notifs: StudentNotification[]): void => {
+      if (typeof window === "undefined") return;
+      try {
+        const key = `noticeiq_student_notifications_${studentId}`;
+        localStorage.setItem(key, JSON.stringify(notifs));
+        setTaskVersion((v) => v + 1);
+      } catch (err) {
+        console.error("Failed to save notifications", err);
+      }
+    },
+    []
+  );
+
+  const getStudentNotificationPreferences = useCallback(
+    (studentOverride?: StudentProfile | null): StudentNotificationPreferences => {
+      const target = studentOverride !== undefined ? studentOverride : currentStudent;
+      if (!target) return DEFAULT_NOTIFICATION_PREFERENCES;
+
+      if (typeof window === "undefined") {
+        return { ...DEFAULT_NOTIFICATION_PREFERENCES, studentId: target.id };
+      }
+      try {
+        const key = `noticeiq_student_notif_prefs_${target.id}`;
+        const stored = localStorage.getItem(key);
+        if (stored) {
+          return JSON.parse(stored);
+        }
+      } catch {
+        // Fallback default
+      }
+      return { ...DEFAULT_NOTIFICATION_PREFERENCES, studentId: target.id };
+    },
+    [currentStudent]
+  );
+
+  const updateStudentNotificationPreferences = useCallback(
+    (preferences: Partial<StudentNotificationPreferences>): void => {
+      if (!currentStudent || typeof window === "undefined") return;
+      try {
+        const current = getStudentNotificationPreferences(currentStudent);
+        const updated = { ...current, ...preferences, studentId: currentStudent.id };
+        const key = `noticeiq_student_notif_prefs_${currentStudent.id}`;
+        localStorage.setItem(key, JSON.stringify(updated));
+        setTaskVersion((v) => v + 1);
+      } catch (err) {
+        console.error("Failed to save notification preferences", err);
+      }
+    },
+    [currentStudent, getStudentNotificationPreferences]
+  );
+
+  // Sync and get all notifications for student
+  const getStudentNotifications = useCallback(
+    (studentOverride?: StudentProfile | null): StudentNotification[] => {
+      const target = studentOverride !== undefined ? studentOverride : currentStudent;
+      if (!target) return [];
+
+      const existing = getStoredNotifications(target.id);
+      const noticesWithRel = getStudentNoticesWithRelevance(target);
+      const tasks = getStudentPriorityTasks(target);
+      const scheduleResult = getStudentSchedule(7, target);
+      const prefs = getStudentNotificationPreferences(target);
+
+      const synced = syncAndDeduplicateAllNotifications(
+        target,
+        noticesWithRel,
+        tasks,
+        scheduleResult,
+        existing,
+        prefs
+      );
+
+      // Persist if count or items changed
+      if (JSON.stringify(synced) !== JSON.stringify(existing) && typeof window !== "undefined") {
+        try {
+          const key = `noticeiq_student_notifications_${target.id}`;
+          localStorage.setItem(key, JSON.stringify(synced));
+        } catch (e) {
+          console.error("Failed to sync notifications", e);
+        }
+      }
+
+      return synced;
+    },
+    [
+      currentStudent,
+      getStoredNotifications,
+      getStudentNoticesWithRelevance,
+      getStudentPriorityTasks,
+      getStudentSchedule,
+      getStudentNotificationPreferences,
+      taskVersion,
+    ]
+  );
+
+  const getUnreadNotificationCount = useCallback(
+    (studentOverride?: StudentProfile | null): number => {
+      const notifs = getStudentNotifications(studentOverride);
+      return notifs.filter((n) => !n.isRead).length;
+    },
+    [getStudentNotifications]
+  );
+
+  const markNotificationAsRead = useCallback(
+    (notificationId: string): void => {
+      if (!currentStudent) return;
+      const existing = getStoredNotifications(currentStudent.id);
+      const updated = existing.map((n) =>
+        n.id === notificationId || n.deduplicationKey === notificationId
+          ? { ...n, isRead: true, readAt: new Date().toISOString() }
+          : n
+      );
+      setStoredNotifications(currentStudent.id, updated);
+    },
+    [currentStudent, getStoredNotifications, setStoredNotifications]
+  );
+
+  const markAllNotificationsAsRead = useCallback((): void => {
+    if (!currentStudent) return;
+    const existing = getStoredNotifications(currentStudent.id);
+    const updated = existing.map((n) => ({
+      ...n,
+      isRead: true,
+      readAt: n.readAt || new Date().toISOString(),
+    }));
+    setStoredNotifications(currentStudent.id, updated);
+  }, [currentStudent, getStoredNotifications, setStoredNotifications]);
+
+  const deleteNotification = useCallback(
+    (notificationId: string): void => {
+      if (!currentStudent) return;
+      const existing = getStoredNotifications(currentStudent.id);
+      const updated = existing.filter(
+        (n) => n.id !== notificationId && n.deduplicationKey !== notificationId
+      );
+      setStoredNotifications(currentStudent.id, updated);
+    },
+    [currentStudent, getStoredNotifications, setStoredNotifications]
+  );
+
   // 18. Logout
   const logoutStudent = () => {
     setCurrentStudent(null);
@@ -930,6 +1095,13 @@ export function useStudentAuth() {
     removeScheduleItem,
     setScheduleItemStatus,
     regenerateStudentPlan,
+    getStudentNotifications,
+    getUnreadNotificationCount,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    deleteNotification,
+    getStudentNotificationPreferences,
+    updateStudentNotificationPreferences,
     logoutStudent,
   };
 }
