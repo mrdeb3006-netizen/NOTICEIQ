@@ -9,19 +9,19 @@ export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-white/65 border-b border-white/80 shadow-xs shadow-indigo-950/5 transition-all">
+    <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-[#090d16]/75 border-b border-white/[0.08] shadow-lg shadow-black/20 transition-all">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Logo with glass container */}
+        {/* Logo */}
         <Link
           href="/"
           className="flex items-center gap-2.5 focus:outline-none group"
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/25 border border-white/40 group-hover:scale-105 transition-transform">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 border border-white/20 group-hover:scale-105 transition-transform">
             <Sparkles className="w-4 h-4 fill-white/20" />
           </div>
           <div className="flex flex-col">
-            <span className="text-lg font-extrabold tracking-tight text-slate-900 leading-none">
-              Notice<span className="text-indigo-600">IQ</span>
+            <span className="text-lg font-extrabold tracking-tight text-white leading-none">
+              Notice<span className="text-indigo-400">IQ</span>
             </span>
             <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-400 leading-none mt-0.5">
               Action Platform
@@ -29,32 +29,32 @@ export const Navbar: React.FC = () => {
           </div>
         </Link>
 
-        {/* Desktop Navigation Links with Glass Pills */}
-        <nav className="hidden md:flex items-center gap-1.5 p-1 rounded-full bg-white/40 backdrop-blur-md border border-white/60 shadow-xs text-sm font-medium text-slate-600">
+        {/* Desktop Navigation Links with Dark Glass Pill */}
+        <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-white/[0.04] backdrop-blur-md border border-white/[0.08] shadow-xs text-sm font-medium text-slate-300">
           <Link
             href="/#how-it-works"
-            className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-indigo-600 transition-all flex items-center gap-1.5"
+            className="px-4 py-1.5 rounded-full hover:bg-white/[0.08] hover:text-white transition-all flex items-center gap-1.5"
           >
             <Layers className="w-3.5 h-3.5 text-slate-400" />
             <span>How It Works</span>
           </Link>
           <Link
             href="/#features"
-            className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-indigo-600 transition-all flex items-center gap-1.5"
+            className="px-4 py-1.5 rounded-full hover:bg-white/[0.08] hover:text-white transition-all flex items-center gap-1.5"
           >
             <Compass className="w-3.5 h-3.5 text-slate-400" />
             <span>Features</span>
           </Link>
           <Link
             href="/get-started"
-            className="px-3.5 py-1.5 rounded-full hover:bg-white/80 hover:text-indigo-600 transition-all flex items-center gap-1.5"
+            className="px-4 py-1.5 rounded-full hover:bg-white/[0.08] hover:text-white transition-all flex items-center gap-1.5"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
             <span>Portals</span>
           </Link>
         </nav>
 
-        {/* Desktop CTA Buttons */}
+        {/* Desktop CTA Button */}
         <div className="hidden md:flex items-center gap-3">
           <Button
             href="/get-started"
@@ -73,14 +73,14 @@ export const Navbar: React.FC = () => {
             href="/get-started"
             variant="primary"
             size="sm"
-            className="text-xs px-3 py-1.5 shadow-xs"
+            className="text-xs px-3 py-1.5"
           >
             Get Started
           </Button>
           <button
             type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 bg-white/60 backdrop-blur-md border border-white/70 hover:bg-white/90 focus:outline-none shadow-xs"
+            className="p-2 rounded-xl text-slate-300 hover:text-white bg-white/[0.05] backdrop-blur-md border border-white/[0.1] hover:bg-white/[0.1] focus:outline-none"
             aria-label="Toggle Navigation Menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -88,41 +88,41 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile dropdown menu with Frosted Glass */}
+      {/* Mobile dropdown menu with Dark Frosted Glass */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-white/80 bg-white/80 backdrop-blur-2xl px-4 py-5 space-y-3 shadow-xl shadow-indigo-950/5 animate-in slide-in-from-top-2 duration-200">
-          <nav className="flex flex-col space-y-2 text-sm font-medium text-slate-700">
+        <div className="md:hidden border-b border-white/[0.08] bg-[#090d16]/95 backdrop-blur-2xl px-4 py-5 space-y-3 shadow-2xl shadow-black animate-in slide-in-from-top-2 duration-200">
+          <nav className="flex flex-col space-y-2 text-sm font-medium text-slate-200">
             <Link
               href="/#how-it-works"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3.5 py-2 rounded-xl hover:bg-white/80 border border-transparent hover:border-white/80 flex items-center gap-2"
+              className="px-3.5 py-2.5 rounded-xl hover:bg-white/[0.06] border border-transparent hover:border-white/[0.1] flex items-center gap-2.5 transition-colors"
             >
-              <Layers className="w-4 h-4 text-indigo-600" />
+              <Layers className="w-4 h-4 text-indigo-400" />
               <span>How It Works</span>
             </Link>
             <Link
               href="/#features"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3.5 py-2 rounded-xl hover:bg-white/80 border border-transparent hover:border-white/80 flex items-center gap-2"
+              className="px-3.5 py-2.5 rounded-xl hover:bg-white/[0.06] border border-transparent hover:border-white/[0.1] flex items-center gap-2.5 transition-colors"
             >
-              <Compass className="w-4 h-4 text-indigo-600" />
+              <Compass className="w-4 h-4 text-indigo-400" />
               <span>Features</span>
             </Link>
             <Link
               href="/get-started"
               onClick={() => setMobileMenuOpen(false)}
-              className="px-3.5 py-2 rounded-xl hover:bg-white/80 border border-transparent hover:border-white/80 flex items-center gap-2"
+              className="px-3.5 py-2.5 rounded-xl hover:bg-white/[0.06] border border-transparent hover:border-white/[0.1] flex items-center gap-2.5 transition-colors"
             >
-              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+              <ShieldCheck className="w-4 h-4 text-indigo-400" />
               <span>Role Selection</span>
             </Link>
           </nav>
-          <div className="pt-2 border-t border-slate-200/50 flex flex-col gap-2">
+          <div className="pt-2 border-t border-white/[0.08] flex flex-col gap-2">
             <Button
               href="/get-started"
               variant="primary"
               size="md"
-              className="w-full justify-center shadow-md shadow-indigo-500/20"
+              className="w-full justify-center shadow-lg shadow-indigo-500/25"
               onClick={() => setMobileMenuOpen(false)}
             >
               Get Started

@@ -38,7 +38,7 @@ export default function InstitutionRegisterPage() {
       subtitle="Connect your university, college, or school with NoticeIQ's AI action network."
       roleBadge={{
         label: "Institution Onboarding",
-        icon: <Building2 className="w-3.5 h-3.5 text-indigo-600" />,
+        icon: <Building2 className="w-3.5 h-3.5 text-indigo-400" />,
         colorScheme: "indigo",
       }}
       backHref="/auth/institution"
@@ -48,7 +48,7 @@ export default function InstitutionRegisterPage() {
           Already have an account?{" "}
           <Link
             href="/auth/institution"
-            className="font-bold text-indigo-600 hover:text-indigo-700"
+            className="font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
           >
             Login here
           </Link>
@@ -57,31 +57,31 @@ export default function InstitutionRegisterPage() {
     >
       {isSubmitted ? (
         <div className="p-6 rounded-3xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-center space-y-4">
-          <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-base font-bold text-emerald-950">
+            <h2 className="text-base font-bold text-white">
               Registration Request Received
             </h2>
-            <p className="text-xs text-emerald-800 leading-relaxed max-w-sm mx-auto">
-              We have staged onboarding for <strong>{institutionName || "your institution"}</strong>.
+            <p className="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
+              We have staged onboarding for <strong className="text-white">{institutionName || "your institution"}</strong>.
               Full database persistence and workspace configuration will activate in Step 2.
             </p>
           </div>
           <Button
             href="/auth/institution"
-            variant="outline"
+            variant="secondary"
             size="sm"
-            className="bg-white/80"
+            className="bg-white/10"
           >
             Return to Login
           </Button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="p-3.5 rounded-2xl bg-indigo-50/60 backdrop-blur-md border border-indigo-200/50 flex items-start gap-2.5 text-xs text-indigo-900 shadow-xs">
-            <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-2xl bg-indigo-500/10 backdrop-blur-md border border-indigo-500/20 flex items-start gap-2.5 text-xs text-indigo-200 shadow-xs">
+            <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
             <span>
               Institution onboarding allows batch notice broadcast, faculty permissions, and student sync.
             </span>
@@ -109,17 +109,17 @@ export default function InstitutionRegisterPage() {
             />
 
             <div className="space-y-1.5 text-left">
-              <label className="block text-xs font-semibold text-slate-700 tracking-wide uppercase">
+              <label className="block text-xs font-semibold text-slate-300 tracking-wide uppercase">
                 Institution Type
               </label>
               <select
                 value={institutionType}
                 onChange={(e) => setInstitutionType(e.target.value)}
-                className="w-full bg-white/70 backdrop-blur-md text-slate-900 text-sm rounded-xl border border-white/80 hover:border-indigo-200 focus:border-indigo-500 focus:bg-white/90 focus:ring-3 focus:ring-indigo-500/15 py-2.5 px-3.5 outline-none transition-all shadow-xs"
+                className="w-full glass-input text-white text-sm rounded-xl border border-white/10 hover:border-indigo-400/50 focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/20 py-2.5 px-3.5 outline-none transition-all shadow-xs"
               >
-                <option value="college">College / University</option>
-                <option value="school">High School / K-12</option>
-                <option value="academy">Academy / Institute</option>
+                <option value="college" className="bg-[#090d16] text-white">College / University</option>
+                <option value="school" className="bg-[#090d16] text-white">High School / K-12</option>
+                <option value="academy" className="bg-[#090d16] text-white">Academy / Institute</option>
               </select>
             </div>
           </div>
@@ -140,7 +140,7 @@ export default function InstitutionRegisterPage() {
               type="submit"
               variant="primary"
               size="md"
-              className="w-full justify-center shadow-lg shadow-indigo-500/20"
+              className="w-full justify-center shadow-lg shadow-indigo-500/25"
               isLoading={isSubmitting}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >

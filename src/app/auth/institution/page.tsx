@@ -48,17 +48,17 @@ export default function InstitutionLoginPage() {
       subtitle="Access administrative notice management, department routing, and campus metrics."
       roleBadge={{
         label: "Institution Portal",
-        icon: <Building2 className="w-3.5 h-3.5 text-indigo-600" />,
+        icon: <Building2 className="w-3.5 h-3.5 text-indigo-400" />,
         colorScheme: "indigo",
       }}
       backHref="/get-started"
       backLabel="Change Role"
       footer={
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-          <span className="text-slate-500">Need to register a new school or campus?</span>
+          <span className="text-slate-400">Need to register a new school or campus?</span>
           <Link
             href="/auth/institution/register"
-            className="font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+            className="font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition-colors"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             Create Institution
@@ -67,11 +67,11 @@ export default function InstitutionLoginPage() {
       }
     >
       {submittedMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-800 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+        <div className="p-4 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-300 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold text-emerald-950">Authentication Success</p>
-            <p>{submittedMessage}</p>
+            <p className="font-bold text-white">Authentication Success</p>
+            <p className="text-emerald-200">{submittedMessage}</p>
           </div>
         </div>
       )}
@@ -99,7 +99,7 @@ export default function InstitutionLoginPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="hover:text-slate-700 focus:outline-none"
+              className="hover:text-slate-200 focus:outline-none"
               tabIndex={-1}
             >
               {showPassword ? (
@@ -113,10 +113,10 @@ export default function InstitutionLoginPage() {
         />
 
         <div className="flex items-center justify-between text-xs pt-1">
-          <label className="flex items-center gap-2 text-slate-600 cursor-pointer">
+          <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
             <input
               type="checkbox"
-              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500"
             />
             <span>Remember this device</span>
           </label>
@@ -126,7 +126,7 @@ export default function InstitutionLoginPage() {
               e.preventDefault();
               alert("Password reset will be configured in backend authentication step.");
             }}
-            className="text-slate-500 hover:text-indigo-600 font-medium"
+            className="text-slate-400 hover:text-indigo-400 font-medium transition-colors"
           >
             Forgot password?
           </a>
@@ -137,7 +137,7 @@ export default function InstitutionLoginPage() {
             type="submit"
             variant="primary"
             size="md"
-            className="w-full justify-center shadow-lg shadow-indigo-500/20"
+            className="w-full justify-center shadow-lg shadow-indigo-500/25"
             isLoading={isSubmitting}
             rightIcon={<ArrowRight className="w-4 h-4" />}
           >
@@ -146,9 +146,9 @@ export default function InstitutionLoginPage() {
 
           <Button
             href="/auth/institution/register"
-            variant="outline"
+            variant="secondary"
             size="md"
-            className="w-full justify-center text-slate-700"
+            className="w-full justify-center text-slate-300"
             leftIcon={<PlusCircle className="w-4 h-4 text-slate-400" />}
           >
             Create Institution

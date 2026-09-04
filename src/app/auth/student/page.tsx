@@ -69,7 +69,7 @@ export default function StudentLoginPage() {
       subtitle="Access your personalized notices, extracted action items, and adaptive schedules."
       roleBadge={{
         label: "Student Portal",
-        icon: <GraduationCap className="w-3.5 h-3.5 text-indigo-600" />,
+        icon: <GraduationCap className="w-3.5 h-3.5 text-indigo-400" />,
         colorScheme: "indigo",
       }}
       backHref="/get-started"
@@ -82,8 +82,8 @@ export default function StudentLoginPage() {
         </div>
       }
     >
-      {/* Mode Switcher Glass Tabs */}
-      <div className="flex p-1 bg-white/40 backdrop-blur-md rounded-2xl border border-white/70 shadow-xs">
+      {/* Mode Switcher Dark Glass Tabs */}
+      <div className="flex p-1 bg-white/[0.04] backdrop-blur-md rounded-2xl border border-white/[0.08] shadow-xs">
         <button
           type="button"
           onClick={() => {
@@ -93,8 +93,8 @@ export default function StudentLoginPage() {
           }}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl transition-all ${
             authMode === "college"
-              ? "bg-white/90 text-indigo-600 shadow-xs border border-white backdrop-blur-md"
-              : "text-slate-600 hover:text-slate-900"
+              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-white/20"
+              : "text-slate-400 hover:text-white"
           }`}
         >
           <Building className="w-3.5 h-3.5" />
@@ -110,8 +110,8 @@ export default function StudentLoginPage() {
           }}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl transition-all ${
             authMode === "school"
-              ? "bg-white/90 text-indigo-600 shadow-xs border border-white backdrop-blur-md"
-              : "text-slate-600 hover:text-slate-900"
+              ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-white/20"
+              : "text-slate-400 hover:text-white"
           }`}
         >
           <School className="w-3.5 h-3.5" />
@@ -120,11 +120,11 @@ export default function StudentLoginPage() {
       </div>
 
       {submittedMessage && (
-        <div className="p-4 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-800 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+        <div className="p-4 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-300 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-bold text-emerald-950">Sign-in Link Ready</p>
-            <p>{submittedMessage}</p>
+            <p className="font-bold text-white">Sign-in Link Ready</p>
+            <p className="text-emerald-200">{submittedMessage}</p>
           </div>
         </div>
       )}
@@ -132,12 +132,12 @@ export default function StudentLoginPage() {
       {/* Option 1: College Student */}
       {authMode === "college" && (
         <form onSubmit={handleCollegeSubmit} className="space-y-5">
-          <div className="p-4 rounded-2xl bg-white/50 backdrop-blur-md border border-white/80 space-y-1 shadow-xs">
-            <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-indigo-950">
-              <Building className="w-3.5 h-3.5 text-indigo-600" />
+          <div className="p-4 rounded-2xl bg-white/[0.03] backdrop-blur-md border border-white/[0.06] space-y-1 shadow-xs">
+            <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-indigo-300">
+              <Building className="w-3.5 h-3.5 text-indigo-400" />
               <span>COLLEGE STUDENT</span>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400">
               Use your official college email
             </p>
           </div>
@@ -159,7 +159,7 @@ export default function StudentLoginPage() {
               type="submit"
               variant="primary"
               size="md"
-              className="w-full justify-center shadow-lg shadow-indigo-500/20"
+              className="w-full justify-center shadow-lg shadow-indigo-500/25"
               isLoading={isSubmitting}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
@@ -172,12 +172,12 @@ export default function StudentLoginPage() {
       {/* Option 2: School Student */}
       {authMode === "school" && (
         <form onSubmit={handleSchoolSubmit} className="space-y-5">
-          <div className="p-4 rounded-2xl bg-white/50 backdrop-blur-md border border-white/80 space-y-1 shadow-xs">
-            <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-indigo-950">
-              <School className="w-3.5 h-3.5 text-indigo-600" />
+          <div className="p-4 rounded-2xl bg-white/[0.03] backdrop-blur-md border border-white/[0.06] space-y-1 shadow-xs">
+            <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-indigo-300">
+              <School className="w-3.5 h-3.5 text-indigo-400" />
               <span>SCHOOL STUDENT</span>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400">
               Use the student ID provided by your school
             </p>
           </div>
@@ -199,7 +199,7 @@ export default function StudentLoginPage() {
               type="submit"
               variant="primary"
               size="md"
-              className="w-full justify-center shadow-lg shadow-indigo-500/20"
+              className="w-full justify-center shadow-lg shadow-indigo-500/25"
               isLoading={isSubmitting}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
@@ -210,9 +210,9 @@ export default function StudentLoginPage() {
       )}
 
       {/* Overview of both options note */}
-      <div className="pt-2 border-t border-slate-200/50 flex items-center justify-between text-xs text-slate-500">
-        <span className="flex items-center gap-1 text-[11px] text-slate-400">
-          <Sparkles className="w-3 h-3 text-indigo-500" />
+      <div className="pt-2 border-t border-white/[0.08] flex items-center justify-between text-xs text-slate-400">
+        <span className="flex items-center gap-1 text-[11px] text-slate-500">
+          <Sparkles className="w-3 h-3 text-indigo-400" />
           Single Sign-On & ID sync enabled
         </span>
         <button
@@ -222,7 +222,7 @@ export default function StudentLoginPage() {
             setError(null);
             setSubmittedMessage(null);
           }}
-          className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
+          className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors"
         >
           Switch to {authMode === "college" ? "School Student" : "College Student"} →
         </button>
