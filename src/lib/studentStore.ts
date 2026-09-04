@@ -61,12 +61,14 @@ import {
   setCachedRelevance,
   invalidateStudentRelevanceCache,
 } from "./relevanceEngine";
-import { NoticeRelevance } from "@/types/student";
+import { generateStudentPriorityTasks } from "./priorityEngine";
+import { NoticeRelevance, PriorityTask } from "@/types/student";
 
 export type NoticeWithRelevance = Notice & {
   isRead: boolean;
   relevance: NoticeRelevance;
 };
+
 
 export function useStudentAuth() {
   const [currentStudent, setCurrentStudent] = useState<StudentProfile | null>(null);
@@ -291,7 +293,74 @@ export function useStudentAuth() {
     return withRel.filter((n) => n.relevance.relevance !== "NOT_RELEVANT");
   };
 
-  // 7. Mark notice as read
+  // 7. Completed tasks state
+  const [completedTaskIds, setCompletedTaskIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !currentStudent) return;
+    try {
+      const stored = localStorage.getItem(`noticeiq_completed_tasks_${currentStudent.id}`);
+      if (stored) {
+        setCompletedTaskIds(JSON.parse(stored));
+      } else {
+        setCompletedTaskIds([]);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, [currentStudent?.id]);
+
+  const toggleTaskComplete = (taskId: string) => {
+    if (!currentStudent || typeof window === "undefined") return;
+    try {
+      const key = `noticeiq_completed_tasks_${currentStudent.id}`;
+      const stored = localStorage.getItem(key);
+      const currentCompleted: string[] = stored ? JSON.parse(stored) : [];
+      let nextCompleted: string[] = [];
+      if (currentCompleted.includes(taskId)) {
+        nextCompleted = currentCompleted.filter((id) => id !== taskId);
+      } else {
+        nextCompleted = [...currentCompleted, taskId];
+      }
+      localStorage.setItem(key, JSON.stringify(nextCompleted));
+      setCompletedTaskIds(nextCompleted);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const resetTaskCompletions = () => {
+    if (!currentStudent || typeof window === "undefined") return;
+    try {
+      const key = `noticeiq_completed_tasks_${currentStudent.id}`;
+      localStorage.removeItem(key);
+      setCompletedTaskIds([]);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // 8. Get Prioritized Tasks (Step 7 Priority Engine)
+  const getStudentPriorityTasks = (studentOverride?: StudentProfile | null): PriorityTask[] => {
+    const targetStudent = studentOverride !== undefined ? studentOverride : currentStudent;
+    if (!targetStudent) return [];
+
+    let activeCompleted = completedTaskIds;
+    if (typeof window !== "undefined" && targetStudent.id !== currentStudent?.id) {
+      try {
+        const stored = localStorage.getItem(`noticeiq_completed_tasks_${targetStudent.id}`);
+        if (stored) activeCompleted = JSON.parse(stored);
+        else activeCompleted = [];
+      } catch {
+        activeCompleted = [];
+      }
+    }
+
+    const noticesWithRel = getStudentNoticesWithRelevance(targetStudent);
+    return generateStudentPriorityTasks(targetStudent, noticesWithRel, activeCompleted);
+  };
+
+  // 9. Mark notice as read
   const markNoticeAsRead = (noticeId: string) => {
     if (!currentStudent || typeof window === "undefined") return;
     try {
@@ -307,7 +376,7 @@ export function useStudentAuth() {
     }
   };
 
-  // 8. Logout
+  // 10. Logout
   const logoutStudent = () => {
     setCurrentStudent(null);
     setStoredStudent(null);
@@ -317,6 +386,7 @@ export function useStudentAuth() {
     currentStudent,
     allStudents,
     isLoaded,
+    completedTaskIds,
     verifyCollegeDomain,
     verifyCollegeOtp,
     verifySchoolStudent,
@@ -325,9 +395,13 @@ export function useStudentAuth() {
     updateStudentPreferences,
     getStudentNoticesWithRelevance,
     getStudentNotices,
+    getStudentPriorityTasks,
+    toggleTaskComplete,
+    resetTaskCompletions,
     markNoticeAsRead,
     logoutStudent,
   };
 }
+
 
 

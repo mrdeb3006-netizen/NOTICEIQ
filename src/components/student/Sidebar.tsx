@@ -39,19 +39,17 @@ export const StudentSidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
       label: "Inbox",
       href: "/student/inbox",
       icon: <Inbox className="w-4 h-4" />,
-      comingSoon: true,
     },
     {
       label: "My Actions",
       href: "/student/actions",
       icon: <Zap className="w-4 h-4" />,
-      comingSoon: true,
     },
     {
       label: "Priority Matrix",
-      href: "/student/matrix",
+      href: "/student/priority",
       icon: <Target className="w-4 h-4" />,
-      comingSoon: true,
+      badge: "Q1–Q4",
     },
     {
       label: "Schedule",
@@ -135,7 +133,9 @@ export const StudentSidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
             Workspace Menu
           </div>
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive =
+              pathname === item.href ||
+              (item.href === "/student/priority" && pathname === "/student/matrix");
             return (
               <Link
                 key={item.href}
@@ -157,6 +157,18 @@ export const StudentSidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
                   </span>
                   <span>{item.label}</span>
                 </div>
+
+                {item.badge && (
+                  <span
+                    className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase tracking-wider ${
+                      isActive
+                        ? "bg-indigo-700/80 text-white"
+                        : "bg-indigo-50 text-indigo-700 border border-indigo-200/60"
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
 
                 {item.comingSoon && (
                   <span
