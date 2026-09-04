@@ -5,11 +5,13 @@ export interface StudentProfile {
   institutionId: string;
   institutionName: string;
   institutionType: "college" | "school";
+  type?: "college" | "school"; // alias
   name: string;
   email?: string;
   studentId?: string;
   department?: string; // CSE, IT, ECE for college
   className?: string; // Class 10, 11, 12 for school
+  class?: string; // alias
   year?: string; // 1st Year, 2nd Year for college
   section: string; // A, B, C
   rollNumber: string;

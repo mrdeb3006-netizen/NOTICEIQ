@@ -16,22 +16,24 @@ import {
   ShieldCheck,
   User,
   CheckCircle2,
+  Megaphone,
 } from "lucide-react";
 import { useStudentAuth } from "@/lib/studentStore";
 
 export default function StudentDashboardPage() {
-  const { currentStudent } = useStudentAuth();
+  const { currentStudent, getStudentNotices } = useStudentAuth();
+  const matchedNotices = getStudentNotices();
 
   const isCollege = currentStudent?.institutionType === "college" || !!currentStudent?.email;
 
   const dashboardCards = [
     {
-      title: "Notices",
+      title: "Notices & Circulars",
       icon: <Inbox className="w-6 h-6 text-indigo-600" />,
       bgIcon: "bg-indigo-50",
-      description: "Your institutional notices will appear here.",
+      description: "Official notices and academic circulars stream.",
       subtext: "Filtered specifically for your batch & department.",
-      status: "Coming in Step 4",
+      status: "Live Active",
       href: "/student/notices",
     },
     {
@@ -93,6 +95,84 @@ export default function StudentDashboardPage() {
             <span className="font-mono">Roll #{currentStudent?.rollNumber || "23"}</span>
           </div>
         </div>
+      </section>
+
+      {/* Matching Notices for You Section (Step 4 Live Feed) */}
+      <section className="space-y-4 text-left">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+              <Megaphone className="w-4 h-4 text-indigo-600" />
+              <span>Official Circulars for You</span>
+            </h3>
+            <p className="text-xs text-slate-500">
+              Notices targeted to {isCollege ? `${currentStudent?.department} • ${currentStudent?.year} • Section ${currentStudent?.section}` : `${currentStudent?.className} • Section ${currentStudent?.section}`}.
+            </p>
+          </div>
+
+          <Link
+            href="/student/inbox"
+            className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1"
+          >
+            <span>View All in Inbox</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
+        {matchedNotices.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {matchedNotices.slice(0, 2).map((notice) => (
+              <div
+                key={notice.id}
+                className="p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-indigo-300 shadow-xs transition-all space-y-3 flex flex-col justify-between"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                      {notice.category}
+                    </span>
+                    {!notice.isRead && (
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                        New
+                      </span>
+                    )}
+                  </div>
+
+                  <h4 className="text-sm font-bold text-slate-900 leading-snug">
+                    {notice.title}
+                  </h4>
+
+                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                    {notice.content}
+                  </p>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                  {notice.deadline ? (
+                    <span className="flex items-center gap-1 font-semibold text-amber-800 text-[11px]">
+                      <Clock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>{notice.deadline}</span>
+                    </span>
+                  ) : (
+                    <span className="text-slate-400 text-[11px]">No deadline</span>
+                  )}
+
+                  <Link
+                    href="/student/inbox"
+                    className="text-indigo-600 font-bold text-xs flex items-center gap-1 hover:underline"
+                  >
+                    <span>Open in Inbox</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-6 rounded-2xl bg-white border border-slate-200/80 text-center text-xs text-slate-500">
+            No notices currently published for your cohort.
+          </div>
+        )}
       </section>
 
       {/* 4 Main Placeholder Sections */}

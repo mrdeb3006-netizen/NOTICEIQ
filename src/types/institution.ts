@@ -54,15 +54,81 @@ export interface Group {
   createdAt: string;
 }
 
+export type NoticeCategory =
+  | "Academic"
+  | "Examination"
+  | "Scholarship"
+  | "Event"
+  | "Assignment"
+  | "Administration"
+  | "Placement"
+  | "Club / Activity"
+  | "General";
+
+export type NoticePriorityHint = "low" | "medium" | "high";
+
+export type NoticeTargetType =
+  | "all"
+  | "department"
+  | "year"
+  | "section"
+  | "group"
+  | "selected";
+
 export interface Notice {
   id: string;
   institutionId: string;
   title: string;
+  category: NoticeCategory;
+  priorityHint?: NoticePriorityHint;
   content: string;
-  targetGroup: string;
+  
+  // Attachments
+  attachmentUrl?: string;
+  attachmentName?: string;
+  attachmentType?: "pdf" | "image" | "doc";
+  attachmentSize?: string;
+
+  // Dates & Schedule
+  publicationDate: string;
+  date?: string; // alias for publicationDate backwards compatibility
   deadline?: string;
-  date: string;
-  status: "published" | "draft" | "scheduled";
+  eventDate?: string;
+  startTime?: string;
+  endTime?: string;
+  venue?: string;
+
+  // Targeting & Audience
+  targetType: NoticeTargetType;
+  targetGroup: string; // Display label (e.g. "CSE • 1st Year • Section A" or "All Students")
+  targetDepartment?: string;
+  targetYear?: string;
+  targetClass?: string;
+  targetSection?: string;
+  targetGroupId?: string;
+  targetGroupName?: string;
+  selectedStudentIds?: string[];
   recipientsCount: number;
-  category?: "Academic" | "Scholarship" | "Event" | "Administrative";
+  recipientCount?: number; // alias
+
+  // Lifecycle
+  status: "published" | "draft" | "archived" | "scheduled";
+  createdBy?: string;
+  createdAt: string;
+  publishedAt?: string;
+
+  // Future AI Analysis Stubs (Prepared for Step 5)
+  aiSummary?: string;
+  aiDetectedDeadline?: string;
+  aiDetectedAudience?: string;
+  aiDetectedTasks?: Array<{
+    id: string;
+    title: string;
+    dueDate?: string;
+    priority?: "low" | "medium" | "high" | "critical";
+  }>;
+  aiDetectedRequirements?: string[];
+  aiDetectedConsequences?: string;
+  aiConfidence?: number;
 }
+

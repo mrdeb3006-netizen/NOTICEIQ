@@ -21,19 +21,11 @@ import {
   Building,
 } from "lucide-react";
 import { useInstitutionData } from "@/lib/institutionStore";
+import { Notice } from "@/types/institution";
 
 export default function InstitutionDashboardPage() {
   const { institution, students, faculty, notices } = useInstitutionData();
-  const [selectedNotice, setSelectedNotice] = useState<null | {
-    title: string;
-    targetGroup: string;
-    deadline?: string;
-    date: string;
-    status: string;
-    recipientsCount: number;
-    content: string;
-    category?: string;
-  }>(null);
+  const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
 
   const stats = [
     {

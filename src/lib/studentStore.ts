@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { StudentProfile, StudentAccessType } from "@/types/student";
-import { Institution } from "@/types/institution";
+import { Institution, Notice } from "@/types/institution";
 import {
   registeredInstitutions,
   initialStudentProfiles,
+  initialNotices,
   DEMO_OTP,
 } from "./mockData";
 
@@ -198,7 +199,132 @@ export function useStudentAuth() {
     return updated;
   };
 
-  // 6. Logout
+  // 6. Get targeted notices matching the student
+  const getStudentNotices = (studentOverride?: StudentProfile | null): Array<Notice & { isRead: boolean }> => {
+    const targetStudent = studentOverride !== undefined ? studentOverride : currentStudent;
+    if (!targetStudent) return [];
+
+    let allNotices: Notice[] = initialNotices;
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("noticeiq_notices");
+        if (stored) {
+          allNotices = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Read notices cache
+    let readNoticeIds: string[] = [];
+    if (typeof window !== "undefined") {
+      try {
+        const storedRead = localStorage.getItem(`noticeiq_read_notices_${targetStudent.id}`);
+        if (storedRead) {
+          readNoticeIds = JSON.parse(storedRead);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Filter published notices that target this student
+    const matched = allNotices.filter((notice) => {
+      if (notice.status !== "published") return false;
+
+      // 1. All students broadcast
+      if (notice.targetType === "all" || notice.targetGroup === "All Students") {
+        return true;
+      }
+
+      // 2. Selected students
+      if (notice.targetType === "selected" && notice.selectedStudentIds) {
+        return notice.selectedStudentIds.includes(targetStudent.id);
+      }
+
+      // 3. College student matching
+      if (targetStudent.type === "college") {
+        const studentDept = targetStudent.department?.toUpperCase();
+        const studentYear = targetStudent.year?.toUpperCase();
+        const studentSec = targetStudent.section?.toUpperCase();
+
+        const noticeDept = notice.targetDepartment?.toUpperCase();
+        const noticeYear = notice.targetYear?.toUpperCase();
+        const noticeSec = notice.targetSection?.toUpperCase();
+
+        if (notice.targetType === "department" && noticeDept) {
+          return studentDept === noticeDept;
+        }
+
+        if (notice.targetType === "year") {
+          const deptMatch = !noticeDept || studentDept === noticeDept;
+          const yearMatch = !noticeYear || studentYear?.includes(noticeYear) || noticeYear?.includes(studentYear || "");
+          return deptMatch && yearMatch;
+        }
+
+        if (notice.targetType === "section") {
+          const deptMatch = !noticeDept || studentDept === noticeDept;
+          const yearMatch = !noticeYear || studentYear?.includes(noticeYear) || noticeYear?.includes(studentYear || "");
+          const secMatch = !noticeSec || studentSec === noticeSec || noticeSec === "ALL";
+          return deptMatch && yearMatch && secMatch;
+        }
+
+        // Target group string matching fallback
+        const tg = notice.targetGroup.toUpperCase();
+        if (studentDept && tg.includes(studentDept)) {
+          if (studentYear && (tg.includes("ALL YEARS") || tg.includes(studentYear))) {
+            return true;
+          }
+        }
+      }
+
+      // 4. School student matching
+      if (targetStudent.type === "school") {
+        const studentClass = targetStudent.class?.toUpperCase();
+        const studentSec = targetStudent.section?.toUpperCase();
+
+        const noticeClass = notice.targetClass?.toUpperCase();
+        const noticeSec = notice.targetSection?.toUpperCase();
+
+        if (noticeClass && studentClass?.includes(noticeClass)) {
+          if (!noticeSec || noticeSec === "ALL" || studentSec === noticeSec) {
+            return true;
+          }
+        }
+
+        const tg = notice.targetGroup.toUpperCase();
+        if (studentClass && tg.includes(studentClass)) {
+          return true;
+        }
+      }
+
+      return false;
+    });
+
+    return matched.map((n) => ({
+      ...n,
+      isRead: readNoticeIds.includes(n.id),
+    }));
+  };
+
+  // 7. Mark notice as read
+  const markNoticeAsRead = (noticeId: string) => {
+    if (!currentStudent || typeof window === "undefined") return;
+    try {
+      const key = `noticeiq_read_notices_${currentStudent.id}`;
+      const storedRead = localStorage.getItem(key);
+      const readNoticeIds: string[] = storedRead ? JSON.parse(storedRead) : [];
+      if (!readNoticeIds.includes(noticeId)) {
+        const next = [...readNoticeIds, noticeId];
+        localStorage.setItem(key, JSON.stringify(next));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // 8. Logout
   const logoutStudent = () => {
     setCurrentStudent(null);
     setStoredStudent(null);
@@ -212,6 +338,9 @@ export function useStudentAuth() {
     verifySchoolStudent,
     loginStudent,
     updateStudentPreferences,
+    getStudentNotices,
+    markNoticeAsRead,
     logoutStudent,
   };
 }
+

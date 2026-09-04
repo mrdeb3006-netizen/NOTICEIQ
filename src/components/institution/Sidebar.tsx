@@ -121,41 +121,66 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
             Workspace Navigation
           </div>
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/institution/dashboard" && pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={onCloseMobile}
-                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
-                  isActive
-                    ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/20 font-bold"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`transition-transform group-hover:scale-110 ${
-                      isActive ? "text-white" : "text-slate-500 group-hover:text-indigo-600"
-                    }`}
-                  >
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
-                </div>
+            const isActive = pathname === item.href || (item.href !== "/institution/dashboard" && pathname.startsWith(item.href) && !pathname.includes("notices/create"));
+            const isNoticesItem = item.label === "Notices";
+            const isCreateNoticeActive = pathname === "/institution/notices/create";
 
-                {item.badge && (
-                  <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                      isActive
-                        ? "bg-indigo-700/60 text-white"
-                        : "bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600"
+            return (
+              <div key={item.href} className="space-y-1">
+                <Link
+                  href={item.href}
+                  onClick={onCloseMobile}
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
+                    isActive
+                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/20 font-bold"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`transition-transform group-hover:scale-110 ${
+                        isActive ? "text-white" : "text-slate-500 group-hover:text-indigo-600"
+                      }`}
+                    >
+                      {item.icon}
+                    </span>
+                    <span>{item.label}</span>
+                  </div>
+
+                  {item.badge && (
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                        isActive
+                          ? "bg-indigo-700/60 text-white"
+                          : "bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600"
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Sub-item for Notices: Create Notice */}
+                {isNoticesItem && (
+                  <Link
+                    href="/institution/notices/create"
+                    onClick={onCloseMobile}
+                    className={`flex items-center justify-between ml-7 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
+                      isCreateNoticeActive
+                        ? "bg-indigo-50 text-indigo-700 font-bold border border-indigo-200/60"
+                        : "text-slate-500 hover:text-indigo-600 hover:bg-slate-50"
                     }`}
                   >
-                    {item.badge}
-                  </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                      + Create Notice
+                    </span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-indigo-100/70 text-indigo-700 font-semibold">
+                      New
+                    </span>
+                  </Link>
                 )}
-              </Link>
+              </div>
             );
           })}
         </nav>

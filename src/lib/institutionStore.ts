@@ -130,6 +130,89 @@ export function useInstitutionData() {
     return group;
   };
 
+  const publishNotice = (newNotice: Omit<Notice, "id" | "institutionId" | "createdAt" | "status" | "publicationDate"> & { publicationDate?: string; deadline?: string }) => {
+    const pubDate = newNotice.publicationDate || new Date().toISOString().split("T")[0];
+    const notice: Notice = {
+      ...newNotice,
+      id: `not-${Date.now()}`,
+      institutionId: institution.id,
+      publicationDate: pubDate,
+      date: pubDate,
+      status: "published",
+      createdBy: newNotice.createdBy || institution.adminName || "Admin",
+      createdAt: new Date().toISOString(),
+      publishedAt: new Date().toISOString(),
+      recipientsCount: newNotice.recipientsCount || newNotice.recipientCount || 486,
+      recipientCount: newNotice.recipientsCount || newNotice.recipientCount || 486,
+    };
+
+    setNotices((prev) => {
+      const next = [notice, ...prev];
+      setStoredItem(STORAGE_KEYS.NOTICES, next);
+      return next;
+    });
+
+    return notice;
+  };
+
+  const saveDraftNotice = (draftData: Partial<Notice>) => {
+    const notice: Notice = {
+      id: draftData.id || `not-draft-${Date.now()}`,
+      institutionId: institution.id,
+      title: draftData.title || "Untitled Draft Notice",
+      category: draftData.category || "General",
+      content: draftData.content || "",
+      targetType: draftData.targetType || "all",
+      targetGroup: draftData.targetGroup || "All Students",
+      targetDepartment: draftData.targetDepartment,
+      targetYear: draftData.targetYear,
+      targetClass: draftData.targetClass,
+      targetSection: draftData.targetSection,
+      targetGroupId: draftData.targetGroupId,
+      selectedStudentIds: draftData.selectedStudentIds,
+      publicationDate: new Date().toISOString().split("T")[0],
+      date: new Date().toISOString().split("T")[0],
+      deadline: draftData.deadline,
+      eventDate: draftData.eventDate,
+      startTime: draftData.startTime,
+      endTime: draftData.endTime,
+      venue: draftData.venue,
+      status: "draft",
+      recipientsCount: draftData.recipientsCount || 0,
+      recipientCount: draftData.recipientsCount || 0,
+      createdBy: draftData.createdBy || institution.adminName || "Admin",
+      createdAt: new Date().toISOString(),
+      attachmentName: draftData.attachmentName,
+      attachmentType: draftData.attachmentType,
+      attachmentSize: draftData.attachmentSize,
+    };
+
+    setNotices((prev) => {
+      const existingIdx = prev.findIndex((n) => n.id === notice.id);
+      let next: Notice[];
+      if (existingIdx >= 0) {
+        next = [...prev];
+        next[existingIdx] = notice;
+      } else {
+        next = [notice, ...prev];
+      }
+      setStoredItem(STORAGE_KEYS.NOTICES, next);
+      return next;
+    });
+
+    return notice;
+  };
+
+  const archiveNotice = (id: string) => {
+    setNotices((prev) => {
+      const next = prev.map((n) =>
+        n.id === id ? { ...n, status: "archived" as const } : n
+      );
+      setStoredItem(STORAGE_KEYS.NOTICES, next);
+      return next;
+    });
+  };
+
   return {
     institution,
     students,
@@ -142,5 +225,9 @@ export function useInstitutionData() {
     addMultipleStudents,
     addFacultyMember,
     addGroup,
+    publishNotice,
+    saveDraftNotice,
+    archiveNotice,
   };
 }
+
