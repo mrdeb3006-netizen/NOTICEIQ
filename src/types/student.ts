@@ -34,3 +34,36 @@ export interface StudentAccessRecord {
   verified: boolean;
   verifiedAt: string;
 }
+
+export type NoticeRelevanceLevel = "HIGH" | "MEDIUM" | "LOW" | "NOT_RELEVANT";
+
+export interface PersonalizedAction {
+  id: string;
+  noticeId: string;
+  noticeTitle: string;
+  title: string;
+  description?: string;
+  deadline?: string | null;
+  estimatedMinutes?: number | null;
+  status: "pending" | "completed";
+  sourceTask?: string;
+}
+
+export interface NoticeRelevance {
+  id: string;
+  noticeId: string;
+  studentId: string;
+  relevance: NoticeRelevanceLevel;
+  score: number; // 0 to 100
+  reasons: string[];
+  matchedCriteria: string[];
+  unmatchedCriteria: string[];
+  personalizedSummary?: string;
+  personalizedTasks?: PersonalizedAction[];
+  eligibilityStatus?: "CONFIRMED" | "NEEDS_REVIEW" | "INELIGIBLE";
+  isStale?: boolean;
+  analyzedByAi?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+

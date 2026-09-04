@@ -38,7 +38,7 @@ export const registeredInstitutions: Institution[] = [
 export const defaultInstitution: Institution = registeredInstitutions[0];
 
 export const initialStudentProfiles: StudentProfile[] = [
-  // College Demo Student
+  // 1. College Primary Demo Student (CSE, 1st Year, Section A)
   {
     id: "stu-debendra",
     institutionId: "inst-future-01",
@@ -59,7 +59,49 @@ export const initialStudentProfiles: StudentProfile[] = [
     onboardingCompleted: true,
     joinedDate: "2026-08-01",
   },
-  // School Demo Student
+  // 2. College Demo Student ECE (ECE, 1st Year, Section A) - Required for Step 6 Non-Relevant Testing
+  {
+    id: "stu-ece-demo",
+    institutionId: "inst-future-01",
+    institutionName: "Future Institute of Engineering and Management",
+    institutionType: "college",
+    name: "Demo Student ECE",
+    email: "demo.ece@futurecollege.ac.in",
+    department: "Electronics & Communication Engineering",
+    year: "1st Year",
+    section: "A",
+    rollNumber: "45",
+    status: "active",
+    accessType: "COLLEGE_EMAIL",
+    interests: ["Embedded Systems", "IoT", "Robotics"],
+    preferredStartTime: "5 PM",
+    preferredEndTime: "9 PM",
+    availableDailyHours: "2 hours",
+    onboardingCompleted: true,
+    joinedDate: "2026-08-01",
+  },
+  // 3. College Demo Student 2nd Year (CSE, 2nd Year, Section B)
+  {
+    id: "stu-cse-2nd",
+    institutionId: "inst-future-01",
+    institutionName: "Future Institute of Engineering and Management",
+    institutionType: "college",
+    name: "Rohan Sen (2nd Year CSE)",
+    email: "rohan.sen@futurecollege.ac.in",
+    department: "Computer Science & Engineering",
+    year: "2nd Year",
+    section: "B",
+    rollNumber: "18",
+    status: "active",
+    accessType: "COLLEGE_EMAIL",
+    interests: ["Competitive Coding", "System Design"],
+    preferredStartTime: "7 PM",
+    preferredEndTime: "11 PM",
+    availableDailyHours: "3 hours",
+    onboardingCompleted: true,
+    joinedDate: "2025-08-01",
+  },
+  // 4. School Demo Student (Class 10, Section B)
   {
     id: "stu-aarav",
     institutionId: "inst-school-01",
@@ -79,7 +121,7 @@ export const initialStudentProfiles: StudentProfile[] = [
     onboardingCompleted: true,
     joinedDate: "2026-08-01",
   },
-  // Other college students
+  // 5. Other college students
   {
     id: "stu-002",
     institutionId: "inst-future-01",
@@ -432,6 +474,164 @@ Admit cards will only be generated after fee verification.`,
     recipientCount: 210,
     createdBy: "Dr. Alok Verma",
     createdAt: "2026-09-04T12:00:00Z",
+  },
+  {
+    id: "not-006",
+    institutionId: "inst-future-01",
+    title: "AI Research & Innovation Fellowship 2026",
+    category: "Academic",
+    priorityHint: "high",
+    content: `Students interested in Artificial Intelligence, Machine Learning, and Autonomous Agents are invited to apply for the National AI Fellowship.
+Selected students will receive a research stipend and faculty mentorship.
+Requirements: Demonstrated interest in AI/ML and submission of a 1-page project proposal by September 20, 2026.`,
+    targetType: "all",
+    targetGroup: "All Students",
+    publicationDate: "2026-09-03",
+    date: "03 Sep 2026",
+    deadline: "September 20, 2026",
+    status: "published",
+    recipientsCount: 2430,
+    recipientCount: 2430,
+    createdBy: "AI Research Lab",
+    createdAt: "2026-09-03T10:00:00Z",
+    publishedAt: "2026-09-03T10:15:00Z",
+    aiAnalysisStatus: "APPROVED",
+    aiConfidence: 0.94,
+    aiSummary: "Students passionate about AI and Machine Learning can apply for the research fellowship with a 1-page project proposal before September 20.",
+    aiNoticeType: "ACADEMIC",
+    aiAnalysis: {
+      summary: "Students passionate about AI and Machine Learning can apply for the research fellowship with a 1-page project proposal before September 20.",
+      notice_type: "ACADEMIC",
+      audience: {
+        departments: ["CSE", "IT", "ECE"],
+        years: ["1st Year", "2nd Year", "3rd Year", "4th Year"],
+        classes: [],
+        sections: [],
+      },
+      dates: {
+        publication_date: "2026-09-03",
+        deadline: "2026-09-20",
+        event_date: null,
+        start_time: null,
+        end_time: null,
+      },
+      requirements: [
+        "Demonstrated academic or project interest in AI & Machine Learning",
+        "Submission of 1-page project proposal",
+      ],
+      documents_required: [
+        "1-Page Project Proposal",
+        "Updated Resume / Portfolio",
+      ],
+      tasks: [
+        {
+          title: "Draft 1-page AI project proposal",
+          description: "Outline proposed research focus in AI, Machine Learning, or Autonomous Agents.",
+          deadline: "2026-09-18",
+          estimated_minutes: 120,
+        },
+        {
+          title: "Submit fellowship application",
+          description: "Submit proposal and resume to the AI Research Lab portal.",
+          deadline: "2026-09-20",
+          estimated_minutes: 20,
+        },
+      ],
+      consequences: [
+        "Late submissions will not be considered for the research fellowship cohort.",
+      ],
+      dependencies: [
+        {
+          blocked_task: "Submit fellowship application",
+          required_task: "Draft 1-page AI project proposal",
+        },
+      ],
+      important_points: [
+        "Open to all students interested in AI/ML",
+        "Stipend and faculty mentorship provided",
+      ],
+      confidence: 0.94,
+    },
+  },
+  {
+    id: "not-007",
+    institutionId: "inst-future-01",
+    title: "Merit Excellence Honor Fellowship (CGPA > 8.5)",
+    category: "Scholarship",
+    priorityHint: "high",
+    content: `Undergraduate CSE students with a cumulative grade point average (CGPA) above 8.5 are eligible to apply for the Merit Excellence Honor Fellowship.
+Proof of grade transcript and recommendation letter must be submitted to the Dean's Office by September 15, 2026.`,
+    targetType: "department",
+    targetGroup: "CSE • 1st Year",
+    targetDepartment: "CSE",
+    targetYear: "1st Year",
+    publicationDate: "2026-09-04",
+    date: "04 Sep 2026",
+    deadline: "September 15, 2026",
+    status: "published",
+    recipientsCount: 486,
+    recipientCount: 486,
+    createdBy: "Dean of Academic Affairs",
+    createdAt: "2026-09-04T09:00:00Z",
+    publishedAt: "2026-09-04T09:15:00Z",
+    aiAnalysisStatus: "APPROVED",
+    aiConfidence: 0.95,
+    aiSummary: "CSE 1st Year students maintaining a CGPA above 8.5 can apply for the Merit Excellence Honor Fellowship with transcript proof by September 15.",
+    aiNoticeType: "SCHOLARSHIP",
+    aiAnalysis: {
+      summary: "CSE 1st Year students maintaining a CGPA above 8.5 can apply for the Merit Excellence Honor Fellowship with transcript proof by September 15.",
+      notice_type: "SCHOLARSHIP",
+      audience: {
+        departments: ["CSE"],
+        years: ["1st Year"],
+        classes: [],
+        sections: [],
+      },
+      dates: {
+        publication_date: "2026-09-04",
+        deadline: "2026-09-15",
+        event_date: null,
+        start_time: null,
+        end_time: null,
+      },
+      requirements: [
+        "Department must be CSE",
+        "Must be 1st Year undergraduate",
+        "Cumulative CGPA must be strictly above 8.5",
+      ],
+      documents_required: [
+        "Official Grade Transcript",
+        "Faculty Recommendation Letter",
+      ],
+      tasks: [
+        {
+          title: "Obtain official grade transcript",
+          description: "Request verified grade sheet confirming CGPA above 8.5.",
+          deadline: "2026-09-12",
+          estimated_minutes: 45,
+        },
+        {
+          title: "Submit fellowship dossier",
+          description: "Deliver transcript and recommendation letter to Dean's Office.",
+          deadline: "2026-09-15",
+          estimated_minutes: 30,
+        },
+      ],
+      consequences: [
+        "Ineligible students or missing transcripts will be rejected during verification.",
+      ],
+      dependencies: [
+        {
+          blocked_task: "Submit fellowship dossier",
+          required_task: "Obtain official grade transcript",
+        },
+      ],
+      important_points: [
+        "Strict CGPA cutoff > 8.5 applies",
+        "Requires official verification",
+      ],
+      confidence: 0.95,
+    },
   },
 ];
 

@@ -66,13 +66,17 @@ export default function StudentLoginPage() {
   // ---------------------------------------------------------------------------
   // DIRECT 1-CLICK DEMO ACCESS (MVP Fast Bypass)
   // ---------------------------------------------------------------------------
-  const handleDirectAccess = (type: "college" | "school") => {
+  const handleDirectAccess = (type: "college" | "college-ece" | "school") => {
     if (type === "college") {
-      const demoCollege = initialStudentProfiles[0]; // Debendra Bera
+      const demoCollege = initialStudentProfiles[0]; // Debendra Bera (CSE)
       loginStudent(demoCollege);
       router.push("/student/dashboard");
+    } else if (type === "college-ece") {
+      const demoEce = initialStudentProfiles[1]; // Demo Student ECE
+      loginStudent(demoEce);
+      router.push("/student/dashboard");
     } else {
-      const demoSchool = initialStudentProfiles[1]; // Aarav Sen
+      const demoSchool = initialStudentProfiles.find((s) => s.accessType === "SCHOOL_STUDENT_ID") || initialStudentProfiles[3]; // Aarav Sen
       loginStudent(demoSchool);
       router.push("/student/dashboard");
     }
@@ -236,7 +240,7 @@ export default function StudentLoginPage() {
           <span className="text-[10px] text-emerald-400 font-bold">Instant Login</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           <button
             type="button"
             onClick={() => handleDirectAccess("college")}
@@ -244,11 +248,25 @@ export default function StudentLoginPage() {
           >
             <div>
               <span className="block text-xs font-bold text-white group-hover:text-indigo-200">
-                🎓 College Student
+                🎓 CSE Student
               </span>
-              <span className="text-[10px] text-slate-400">Debendra Bera • CSE 1st Year</span>
+              <span className="text-[10px] text-slate-400">Debendra (1st Yr A)</span>
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-indigo-400 group-hover:translate-x-0.5 transition-transform" />
+            <ArrowRight className="w-3.5 h-3.5 text-indigo-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleDirectAccess("college-ece")}
+            className="p-2.5 rounded-xl bg-sky-600/30 hover:bg-sky-600/50 border border-sky-400/40 text-left transition-all group flex items-center justify-between"
+          >
+            <div>
+              <span className="block text-xs font-bold text-white group-hover:text-sky-200">
+                ⚡ ECE Student
+              </span>
+              <span className="text-[10px] text-slate-400">Demo ECE (1st Yr A)</span>
+            </div>
+            <ArrowRight className="w-3.5 h-3.5 text-sky-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </button>
 
           <button
@@ -260,9 +278,9 @@ export default function StudentLoginPage() {
               <span className="block text-xs font-bold text-white group-hover:text-violet-200">
                 🏫 School Student
               </span>
-              <span className="text-[10px] text-slate-400">Aarav Sen • Class 10 Sec B</span>
+              <span className="text-[10px] text-slate-400">Aarav (Class 10 B)</span>
             </div>
-            <ArrowRight className="w-3.5 h-3.5 text-violet-400 group-hover:translate-x-0.5 transition-transform" />
+            <ArrowRight className="w-3.5 h-3.5 text-violet-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </button>
         </div>
       </div>

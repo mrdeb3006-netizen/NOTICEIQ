@@ -55,14 +55,30 @@ function setStoredAllProfiles(profiles: StudentProfile[]): void {
   }
 }
 
+import {
+  calculateNoticeRelevance,
+  getCachedRelevance,
+  setCachedRelevance,
+  invalidateStudentRelevanceCache,
+} from "./relevanceEngine";
+import { NoticeRelevance } from "@/types/student";
+
+export type NoticeWithRelevance = Notice & {
+  isRead: boolean;
+  relevance: NoticeRelevance;
+};
+
 export function useStudentAuth() {
   const [currentStudent, setCurrentStudent] = useState<StudentProfile | null>(null);
+  const [allStudents, setAllStudents] = useState<StudentProfile[]>(initialStudentProfiles);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     // Default to Debendra Bera if no student is active, to allow direct inspection
     const stored = getStoredStudent() || initialStudentProfiles[0];
+    const storedProfiles = getStoredAllProfiles();
     setCurrentStudent(stored);
+    setAllStudents(storedProfiles);
     setIsLoaded(true);
   }, []);
 
@@ -173,7 +189,19 @@ export function useStudentAuth() {
     setStoredStudent(student);
   };
 
-  // 5. Update preferences on onboarding or profile page
+  // 4b. Switch persona quickly for testing
+  const switchStudentPersona = (studentId: string) => {
+    const profiles = getStoredAllProfiles();
+    const target = profiles.find((p) => p.id === studentId);
+    if (target) {
+      setCurrentStudent(target);
+      setStoredStudent(target);
+      return target;
+    }
+    return null;
+  };
+
+  // 5. Update preferences on onboarding or profile page (institution fields are immutable)
   const updateStudentPreferences = (preferences: {
     interests: string[];
     preferredStartTime: string;
@@ -182,25 +210,35 @@ export function useStudentAuth() {
   }) => {
     if (!currentStudent) return;
 
+    // Student can only update their personal preferences, NOT institution credentials
     const updated: StudentProfile = {
       ...currentStudent,
-      ...preferences,
+      interests: preferences.interests,
+      preferredStartTime: preferences.preferredStartTime,
+      preferredEndTime: preferences.preferredEndTime,
+      availableDailyHours: preferences.availableDailyHours,
       onboardingCompleted: true,
     };
 
     setCurrentStudent(updated);
     setStoredStudent(updated);
 
+    // Invalidate cached relevance for this student so recalculation happens fresh
+    invalidateStudentRelevanceCache(updated.id);
+
     // Also update in all profiles list
     const all = getStoredAllProfiles();
     const nextAll = all.map((p) => (p.id === updated.id ? updated : p));
     setStoredAllProfiles(nextAll);
+    setAllStudents(nextAll);
 
     return updated;
   };
 
-  // 6. Get targeted notices matching the student
-  const getStudentNotices = (studentOverride?: StudentProfile | null): Array<Notice & { isRead: boolean }> => {
+  // 6. Get all notices with calculated NoticeRelevance
+  const getStudentNoticesWithRelevance = (
+    studentOverride?: StudentProfile | null
+  ): NoticeWithRelevance[] => {
     const targetStudent = studentOverride !== undefined ? studentOverride : currentStudent;
     if (!targetStudent) return [];
 
@@ -229,83 +267,28 @@ export function useStudentAuth() {
       }
     }
 
-    // Filter published notices that target this student
-    const matched = allNotices.filter((notice) => {
-      if (notice.status !== "published") return false;
+    const publishedNotices = allNotices.filter((n) => n.status === "published");
 
-      // 1. All students broadcast
-      if (notice.targetType === "all" || notice.targetGroup === "All Students") {
-        return true;
+    return publishedNotices.map((notice) => {
+      // Check cache first
+      let relevance = getCachedRelevance(notice.id, targetStudent.id);
+      if (!relevance) {
+        relevance = calculateNoticeRelevance(notice, targetStudent);
+        setCachedRelevance(relevance);
       }
 
-      // 2. Selected students
-      if (notice.targetType === "selected" && notice.selectedStudentIds) {
-        return notice.selectedStudentIds.includes(targetStudent.id);
-      }
-
-      // 3. College student matching
-      if (targetStudent.type === "college") {
-        const studentDept = targetStudent.department?.toUpperCase();
-        const studentYear = targetStudent.year?.toUpperCase();
-        const studentSec = targetStudent.section?.toUpperCase();
-
-        const noticeDept = notice.targetDepartment?.toUpperCase();
-        const noticeYear = notice.targetYear?.toUpperCase();
-        const noticeSec = notice.targetSection?.toUpperCase();
-
-        if (notice.targetType === "department" && noticeDept) {
-          return studentDept === noticeDept;
-        }
-
-        if (notice.targetType === "year") {
-          const deptMatch = !noticeDept || studentDept === noticeDept;
-          const yearMatch = !noticeYear || studentYear?.includes(noticeYear) || noticeYear?.includes(studentYear || "");
-          return deptMatch && yearMatch;
-        }
-
-        if (notice.targetType === "section") {
-          const deptMatch = !noticeDept || studentDept === noticeDept;
-          const yearMatch = !noticeYear || studentYear?.includes(noticeYear) || noticeYear?.includes(studentYear || "");
-          const secMatch = !noticeSec || studentSec === noticeSec || noticeSec === "ALL";
-          return deptMatch && yearMatch && secMatch;
-        }
-
-        // Target group string matching fallback
-        const tg = notice.targetGroup.toUpperCase();
-        if (studentDept && tg.includes(studentDept)) {
-          if (studentYear && (tg.includes("ALL YEARS") || tg.includes(studentYear))) {
-            return true;
-          }
-        }
-      }
-
-      // 4. School student matching
-      if (targetStudent.type === "school") {
-        const studentClass = targetStudent.class?.toUpperCase();
-        const studentSec = targetStudent.section?.toUpperCase();
-
-        const noticeClass = notice.targetClass?.toUpperCase();
-        const noticeSec = notice.targetSection?.toUpperCase();
-
-        if (noticeClass && studentClass?.includes(noticeClass)) {
-          if (!noticeSec || noticeSec === "ALL" || studentSec === noticeSec) {
-            return true;
-          }
-        }
-
-        const tg = notice.targetGroup.toUpperCase();
-        if (studentClass && tg.includes(studentClass)) {
-          return true;
-        }
-      }
-
-      return false;
+      return {
+        ...notice,
+        isRead: readNoticeIds.includes(notice.id),
+        relevance,
+      };
     });
+  };
 
-    return matched.map((n) => ({
-      ...n,
-      isRead: readNoticeIds.includes(n.id),
-    }));
+  // Legacy compatibility helper
+  const getStudentNotices = (studentOverride?: StudentProfile | null): Array<Notice & { isRead: boolean }> => {
+    const withRel = getStudentNoticesWithRelevance(studentOverride);
+    return withRel.filter((n) => n.relevance.relevance !== "NOT_RELEVANT");
   };
 
   // 7. Mark notice as read
@@ -332,15 +315,19 @@ export function useStudentAuth() {
 
   return {
     currentStudent,
+    allStudents,
     isLoaded,
     verifyCollegeDomain,
     verifyCollegeOtp,
     verifySchoolStudent,
     loginStudent,
+    switchStudentPersona,
     updateStudentPreferences,
+    getStudentNoticesWithRelevance,
     getStudentNotices,
     markNoticeAsRead,
     logoutStudent,
   };
 }
+
 

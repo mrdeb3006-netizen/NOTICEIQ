@@ -21,8 +21,19 @@ import {
 import { useStudentAuth } from "@/lib/studentStore";
 
 export default function StudentDashboardPage() {
-  const { currentStudent, getStudentNotices } = useStudentAuth();
-  const matchedNotices = getStudentNotices();
+  const { currentStudent, getStudentNoticesWithRelevance } = useStudentAuth();
+  const allNoticesWithRel = getStudentNoticesWithRelevance();
+
+  // Filter only relevant notices for the dashboard feed
+  const relevantNotices = allNoticesWithRel.filter(
+    (n) => n.relevance.relevance === "HIGH" || n.relevance.relevance === "MEDIUM"
+  );
+
+  // Count total actions extracted
+  let totalActionsCount = 0;
+  relevantNotices.forEach((n) => {
+    totalActionsCount += n.relevance.personalizedTasks?.length || 0;
+  });
 
   const isCollege = currentStudent?.institutionType === "college" || !!currentStudent?.email;
 
@@ -31,36 +42,36 @@ export default function StudentDashboardPage() {
       title: "Notices & Circulars",
       icon: <Inbox className="w-6 h-6 text-indigo-600" />,
       bgIcon: "bg-indigo-50",
-      description: "Official notices and academic circulars stream.",
-      subtext: "Filtered specifically for your batch & department.",
+      description: "Official notices & personalized relevance scoring.",
+      subtext: `${relevantNotices.length} relevant circulars matching your cohort profile.`,
       status: "Live Active",
-      href: "/student/notices",
+      href: "/student/inbox",
     },
     {
       title: "My Actions",
       icon: <Zap className="w-6 h-6 text-violet-600" />,
       bgIcon: "bg-violet-50",
-      description: "Your personalized actions will appear here.",
-      subtext: "Extracted step-by-step tasks and deadlines.",
-      status: "Coming in Step 5",
+      description: "Personalized task checklist derived from notices.",
+      subtext: `${totalActionsCount} actionable tasks detected with deadline trackers.`,
+      status: "Live Active",
       href: "/student/actions",
     },
     {
       title: "Priority Matrix",
       icon: <Target className="w-6 h-6 text-sky-600" />,
       bgIcon: "bg-sky-50",
-      description: "Your priorities will appear here.",
-      subtext: "Categorized by Urgent & Important Eisenhower matrix.",
-      status: "Coming in Step 5",
+      description: "Eisenhower quadrant task prioritization.",
+      subtext: "Automated urgency/importance categorization.",
+      status: "Coming in Step 7",
       href: "/student/matrix",
     },
     {
       title: "Schedule",
       icon: <Calendar className="w-6 h-6 text-emerald-600" />,
       bgIcon: "bg-emerald-50",
-      description: "Your schedule will appear here.",
-      subtext: `Adaptive daily timetable based on your ${currentStudent?.preferredStartTime || "6 PM"} – ${currentStudent?.preferredEndTime || "10 PM"} preference.`,
-      status: "Coming in Step 6",
+      description: "Adaptive study calendar & time blocks.",
+      subtext: `Target window: ${currentStudent?.preferredStartTime || "6 PM"} – ${currentStudent?.preferredEndTime || "10 PM"}.`,
+      status: "Coming in Step 8",
       href: "/student/schedule",
     },
   ];
@@ -97,16 +108,16 @@ export default function StudentDashboardPage() {
         </div>
       </section>
 
-      {/* Matching Notices for You Section (Step 4 Live Feed) */}
+      {/* Matching Notices for You Section (Step 6 Relevance Feed) */}
       <section className="space-y-4 text-left">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
               <Megaphone className="w-4 h-4 text-indigo-600" />
-              <span>Official Circulars for You</span>
+              <span>Personalized Relevant Circulars</span>
             </h3>
             <p className="text-xs text-slate-500">
-              Notices targeted to {isCollege ? `${currentStudent?.department} • ${currentStudent?.year} • Section ${currentStudent?.section}` : `${currentStudent?.className} • Section ${currentStudent?.section}`}.
+              Notices scored as HIGH or MEDIUM relevance for {isCollege ? `${currentStudent?.department} • ${currentStudent?.year} • Section ${currentStudent?.section}` : `${currentStudent?.className} • Section ${currentStudent?.section}`}.
             </p>
           </div>
 
@@ -114,23 +125,37 @@ export default function StudentDashboardPage() {
             href="/student/inbox"
             className="text-xs font-bold text-indigo-600 hover:text-indigo-700 hover:underline flex items-center gap-1"
           >
-            <span>View All in Inbox</span>
+            <span>View All in Inbox ({relevantNotices.length})</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        {matchedNotices.length > 0 ? (
+        {relevantNotices.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {matchedNotices.slice(0, 2).map((notice) => (
+            {relevantNotices.slice(0, 2).map((notice) => (
               <div
                 key={notice.id}
                 className="p-5 rounded-2xl bg-white border border-slate-200/90 hover:border-indigo-300 shadow-xs transition-all space-y-3 flex flex-col justify-between"
               >
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                      {notice.category}
-                    </span>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border ${
+                          notice.relevance.relevance === "HIGH"
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                            : "bg-amber-50 text-amber-800 border-amber-200"
+                        }`}
+                      >
+                        {notice.relevance.relevance === "HIGH"
+                          ? `🟢 Relevant (${notice.relevance.score}%)`
+                          : `🟡 Possibly Relevant (${notice.relevance.score}%)`}
+                      </span>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                        {notice.category}
+                      </span>
+                    </div>
+
                     {!notice.isRead && (
                       <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
                         New
@@ -170,7 +195,7 @@ export default function StudentDashboardPage() {
           </div>
         ) : (
           <div className="p-6 rounded-2xl bg-white border border-slate-200/80 text-center text-xs text-slate-500">
-            No notices currently published for your cohort.
+            No notices currently published match your active cohort profile.
           </div>
         )}
       </section>

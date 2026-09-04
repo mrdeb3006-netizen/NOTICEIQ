@@ -34,6 +34,9 @@ import {
 } from "lucide-react";
 import { useInstitutionData } from "@/lib/institutionStore";
 import { NoticeAiAnalysis, NoticeAiTask } from "@/types/institution";
+import { calculateNoticeAudienceBreakdown } from "@/lib/relevanceEngine";
+import { initialStudentProfiles } from "@/lib/mockData";
+
 
 export default function NoticeDetailsPage({
   params,
@@ -359,6 +362,72 @@ export default function NoticeDetailsPage({
             </p>
           </div>
         </div>
+
+        {/* =================================================================== */}
+        {/* Step 6: Student Audience Relevance Breakdown Card                   */}
+        {/* =================================================================== */}
+        {(() => {
+          const breakdown = calculateNoticeAudienceBreakdown(notice, initialStudentProfiles);
+          return (
+            <div className="p-6 bg-slate-50/70 border-t border-slate-100 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Student Audience Relevance Breakdown</span>
+                </span>
+                <span className="text-[11px] text-slate-500 font-medium">
+                  Target: <strong className="text-slate-800">{notice.targetGroup}</strong>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3.5 rounded-2xl bg-emerald-50/80 border border-emerald-200/80 space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    Matching Students
+                  </span>
+                  <p className="text-xl font-extrabold text-emerald-950">
+                    {breakdown.matchingCount}
+                  </p>
+                  <span className="text-[10px] text-emerald-700">Direct cohort criteria match (HIGH)</span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 flex items-center gap-1">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                    Potentially Relevant
+                  </span>
+                  <p className="text-xl font-extrabold text-amber-950">
+                    {breakdown.potentiallyRelevantCount}
+                  </p>
+                  <span className="text-[10px] text-amber-700">Needs eligibility / interest review (MEDIUM)</span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-100/90 border border-slate-200 space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 flex items-center gap-1">
+                    <X className="w-3.5 h-3.5 text-slate-400" />
+                    Not Relevant
+                  </span>
+                  <p className="text-xl font-extrabold text-slate-800">
+                    {breakdown.notRelevantCount}
+                  </p>
+                  <span className="text-[10px] text-slate-500">Different stream or year (NOT_RELEVANT)</span>
+                </div>
+              </div>
+
+              {breakdown.sampleMatchingCohorts.length > 0 && (
+                <div className="pt-2 flex items-center gap-2 flex-wrap text-[11px] text-slate-500">
+                  <span className="font-semibold text-slate-600">Active Cohort Matches:</span>
+                  {breakdown.sampleMatchingCohorts.map((c, i) => (
+                    <span key={i} className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-medium">
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Content Body */}
         <div className="p-6 sm:p-8 space-y-4">
