@@ -38,15 +38,15 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       primary:
-        "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm shadow-indigo-500/25 hover:shadow-indigo-500/40 focus-visible:ring-indigo-500",
+        "bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 text-white hover:brightness-105 border border-white/25 shadow-md shadow-indigo-500/25 hover:shadow-indigo-500/40 focus-visible:ring-indigo-500",
       secondary:
-        "bg-slate-100 text-slate-800 hover:bg-slate-200/80 border border-slate-200/70 focus-visible:ring-slate-400",
+        "bg-white/60 backdrop-blur-md text-slate-800 hover:bg-white/85 border border-white/80 shadow-xs focus-visible:ring-slate-400",
       outline:
-        "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:border-slate-300 shadow-sm focus-visible:ring-slate-300",
+        "bg-white/50 backdrop-blur-md text-slate-700 border border-white/80 hover:bg-white/80 hover:border-slate-300 shadow-xs focus-visible:ring-slate-300",
       ghost:
-        "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 focus-visible:ring-slate-300",
+        "text-slate-600 hover:text-slate-900 hover:bg-white/50 backdrop-blur-xs focus-visible:ring-slate-300",
       white:
-        "bg-white text-indigo-600 hover:bg-slate-50 shadow-sm border border-slate-200/80 hover:border-slate-300 focus-visible:ring-white",
+        "bg-white/90 backdrop-blur-md text-indigo-600 hover:bg-white border border-white shadow-sm focus-visible:ring-white",
     };
 
     const combinedClassName = `${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`;

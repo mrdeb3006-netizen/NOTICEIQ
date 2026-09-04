@@ -82,8 +82,8 @@ export default function StudentLoginPage() {
         </div>
       }
     >
-      {/* Mode Switcher Tabs */}
-      <div className="flex p-1 bg-slate-100 rounded-xl border border-slate-200/80">
+      {/* Mode Switcher Glass Tabs */}
+      <div className="flex p-1 bg-white/40 backdrop-blur-md rounded-2xl border border-white/70 shadow-xs">
         <button
           type="button"
           onClick={() => {
@@ -91,9 +91,9 @@ export default function StudentLoginPage() {
             setError(null);
             setSubmittedMessage(null);
           }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl transition-all ${
             authMode === "college"
-              ? "bg-white text-indigo-600 shadow-xs border border-slate-200/70"
+              ? "bg-white/90 text-indigo-600 shadow-xs border border-white backdrop-blur-md"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
@@ -108,9 +108,9 @@ export default function StudentLoginPage() {
             setError(null);
             setSubmittedMessage(null);
           }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold rounded-xl transition-all ${
             authMode === "school"
-              ? "bg-white text-indigo-600 shadow-xs border border-slate-200/70"
+              ? "bg-white/90 text-indigo-600 shadow-xs border border-white backdrop-blur-md"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
@@ -120,10 +120,10 @@ export default function StudentLoginPage() {
       </div>
 
       {submittedMessage && (
-        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
+        <div className="p-4 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-800 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-semibold text-emerald-900">Sign-in Link Ready</p>
+            <p className="font-bold text-emerald-950">Sign-in Link Ready</p>
             <p>{submittedMessage}</p>
           </div>
         </div>
@@ -132,8 +132,8 @@ export default function StudentLoginPage() {
       {/* Option 1: College Student */}
       {authMode === "college" && (
         <form onSubmit={handleCollegeSubmit} className="space-y-5">
-          <div className="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 space-y-1">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-indigo-950">
+          <div className="p-4 rounded-2xl bg-white/50 backdrop-blur-md border border-white/80 space-y-1 shadow-xs">
+            <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-indigo-950">
               <Building className="w-3.5 h-3.5 text-indigo-600" />
               <span>COLLEGE STUDENT</span>
             </div>
@@ -159,7 +159,7 @@ export default function StudentLoginPage() {
               type="submit"
               variant="primary"
               size="md"
-              className="w-full justify-center"
+              className="w-full justify-center shadow-lg shadow-indigo-500/20"
               isLoading={isSubmitting}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
@@ -172,8 +172,8 @@ export default function StudentLoginPage() {
       {/* Option 2: School Student */}
       {authMode === "school" && (
         <form onSubmit={handleSchoolSubmit} className="space-y-5">
-          <div className="p-4 rounded-xl bg-slate-50/70 border border-slate-200/80 space-y-1">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-indigo-950">
+          <div className="p-4 rounded-2xl bg-white/50 backdrop-blur-md border border-white/80 space-y-1 shadow-xs">
+            <div className="flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider text-indigo-950">
               <School className="w-3.5 h-3.5 text-indigo-600" />
               <span>SCHOOL STUDENT</span>
             </div>
@@ -199,7 +199,7 @@ export default function StudentLoginPage() {
               type="submit"
               variant="primary"
               size="md"
-              className="w-full justify-center"
+              className="w-full justify-center shadow-lg shadow-indigo-500/20"
               isLoading={isSubmitting}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
@@ -210,7 +210,7 @@ export default function StudentLoginPage() {
       )}
 
       {/* Overview of both options note */}
-      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+      <div className="pt-2 border-t border-slate-200/50 flex items-center justify-between text-xs text-slate-500">
         <span className="flex items-center gap-1 text-[11px] text-slate-400">
           <Sparkles className="w-3 h-3 text-indigo-500" />
           Single Sign-On & ID sync enabled
@@ -222,7 +222,7 @@ export default function StudentLoginPage() {
             setError(null);
             setSubmittedMessage(null);
           }}
-          className="text-xs font-medium text-indigo-600 hover:text-indigo-700"
+          className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
         >
           Switch to {authMode === "college" ? "School Student" : "College Student"} →
         </button>

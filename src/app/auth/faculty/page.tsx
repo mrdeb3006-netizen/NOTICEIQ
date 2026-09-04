@@ -1,12 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { AuthCard } from "@/components/ui/AuthCard";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import {
-  GraduationCap,
   Mail,
   Lock,
   Eye,
@@ -62,10 +60,10 @@ export default function FacultyLoginPage() {
       }
     >
       {submittedMessage && (
-        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
+        <div className="p-4 rounded-2xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-emerald-800 text-xs flex items-start gap-2.5 animate-in fade-in duration-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <p className="font-semibold text-emerald-900">Access Granted</p>
+            <p className="font-bold text-emerald-950">Access Granted</p>
             <p>{submittedMessage}</p>
           </div>
         </div>
@@ -122,7 +120,7 @@ export default function FacultyLoginPage() {
               e.preventDefault();
               alert("Password reset will be enabled in backend authentication step.");
             }}
-            className="text-slate-500 hover:text-indigo-600"
+            className="text-slate-500 hover:text-indigo-600 font-medium"
           >
             Forgot password?
           </a>
@@ -133,7 +131,7 @@ export default function FacultyLoginPage() {
             type="submit"
             variant="primary"
             size="md"
-            className="w-full justify-center"
+            className="w-full justify-center shadow-lg shadow-indigo-500/20"
             isLoading={isSubmitting}
             rightIcon={<ArrowRight className="w-4 h-4" />}
           >

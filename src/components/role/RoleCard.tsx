@@ -1,5 +1,4 @@
 import React from "react";
-import Link from "next/link";
 import { Button } from "../ui/Button";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 
@@ -25,14 +24,17 @@ export const RoleCard: React.FC<RoleCardProps> = ({
 }) => {
   return (
     <div
-      className={`group relative bg-white border rounded-2xl p-7 flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+      className={`glass-card rounded-3xl p-7 sm:p-8 flex flex-col justify-between relative overflow-hidden group ${
         popular
-          ? "border-indigo-400/80 shadow-lg shadow-indigo-500/5 ring-1 ring-indigo-400/30"
-          : "border-slate-200 hover:border-slate-300 shadow-sm shadow-slate-200/50"
+          ? "border-indigo-300/90 shadow-xl shadow-indigo-500/10 ring-1 ring-indigo-400/40"
+          : ""
       }`}
     >
+      {/* Subtle top rim shine */}
+      <div className="absolute top-0 left-6 right-6 h-px bg-gradient-to-r from-transparent via-white to-transparent" />
+
       {popular && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-indigo-600 text-white text-[11px] font-semibold tracking-wide uppercase shadow-sm">
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-[11px] font-bold tracking-wide uppercase shadow-md shadow-indigo-500/25 border border-white/30">
           Most Popular
         </div>
       )}
@@ -40,10 +42,10 @@ export const RoleCard: React.FC<RoleCardProps> = ({
       <div className="space-y-5">
         {/* Top Header */}
         <div className="flex items-center justify-between">
-          <div className="text-4xl p-2.5 rounded-2xl bg-slate-50 border border-slate-100 group-hover:scale-105 transition-transform inline-block">
+          <div className="text-4xl p-3 rounded-2xl bg-white/70 backdrop-blur-md border border-white shadow-xs group-hover:scale-105 transition-transform inline-block">
             {emoji}
           </div>
-          <span className="text-xs font-semibold text-slate-400 tracking-wider uppercase">
+          <span className="text-xs font-bold text-slate-400 tracking-wider uppercase">
             {tagline}
           </span>
         </div>
@@ -59,9 +61,9 @@ export const RoleCard: React.FC<RoleCardProps> = ({
         </div>
 
         {/* Feature bullets */}
-        <div className="space-y-2 pt-2 border-t border-slate-100">
+        <div className="space-y-2.5 pt-2 border-t border-slate-200/50">
           {features.map((feat, idx) => (
-            <div key={idx} className="flex items-center gap-2 text-xs text-slate-600">
+            <div key={idx} className="flex items-center gap-2 text-xs text-slate-600 font-medium">
               <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
               <span>{feat}</span>
             </div>
@@ -70,12 +72,12 @@ export const RoleCard: React.FC<RoleCardProps> = ({
       </div>
 
       {/* Action button */}
-      <div className="pt-6 mt-6 border-t border-slate-100">
+      <div className="pt-6 mt-6 border-t border-slate-200/50">
         <Button
           href={href}
           variant={popular ? "primary" : "outline"}
           size="md"
-          className="w-full justify-center group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-colors"
+          className="w-full justify-center group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-colors shadow-xs"
           rightIcon={<ArrowRight className="w-4 h-4" />}
         >
           Continue

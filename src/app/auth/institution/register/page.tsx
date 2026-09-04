@@ -48,7 +48,7 @@ export default function InstitutionRegisterPage() {
           Already have an account?{" "}
           <Link
             href="/auth/institution"
-            className="font-semibold text-indigo-600 hover:text-indigo-700"
+            className="font-bold text-indigo-600 hover:text-indigo-700"
           >
             Login here
           </Link>
@@ -56,7 +56,7 @@ export default function InstitutionRegisterPage() {
       }
     >
       {isSubmitted ? (
-        <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-4">
+        <div className="p-6 rounded-3xl bg-emerald-500/10 backdrop-blur-md border border-emerald-500/20 text-center space-y-4">
           <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-6 h-6" />
           </div>
@@ -73,14 +73,14 @@ export default function InstitutionRegisterPage() {
             href="/auth/institution"
             variant="outline"
             size="sm"
-            className="bg-white"
+            className="bg-white/80"
           >
             Return to Login
           </Button>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-100 flex items-start gap-2.5 text-xs text-indigo-900">
+          <div className="p-3.5 rounded-2xl bg-indigo-50/60 backdrop-blur-md border border-indigo-200/50 flex items-start gap-2.5 text-xs text-indigo-900 shadow-xs">
             <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
             <span>
               Institution onboarding allows batch notice broadcast, faculty permissions, and student sync.
@@ -115,7 +115,7 @@ export default function InstitutionRegisterPage() {
               <select
                 value={institutionType}
                 onChange={(e) => setInstitutionType(e.target.value)}
-                className="w-full bg-white text-slate-900 text-sm rounded-xl border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 py-2.5 px-3.5 outline-none"
+                className="w-full bg-white/70 backdrop-blur-md text-slate-900 text-sm rounded-xl border border-white/80 hover:border-indigo-200 focus:border-indigo-500 focus:bg-white/90 focus:ring-3 focus:ring-indigo-500/15 py-2.5 px-3.5 outline-none transition-all shadow-xs"
               >
                 <option value="college">College / University</option>
                 <option value="school">High School / K-12</option>
@@ -140,7 +140,7 @@ export default function InstitutionRegisterPage() {
               type="submit"
               variant="primary"
               size="md"
-              className="w-full justify-center"
+              className="w-full justify-center shadow-lg shadow-indigo-500/20"
               isLoading={isSubmitting}
               rightIcon={<ArrowRight className="w-4 h-4" />}
             >
