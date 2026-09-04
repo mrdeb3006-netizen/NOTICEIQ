@@ -28,15 +28,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth`}>
-      <body className="min-h-full flex flex-col bg-slate-50/90 text-slate-900 antialiased font-sans selection:bg-indigo-100 selection:text-indigo-900 relative">
-        {/* Ambient Glassmorphism Mesh Orbs */}
-        <div className="mesh-glow-container">
-          <div className="mesh-orb-1" />
-          <div className="mesh-orb-2" />
-          <div className="mesh-orb-3" />
+      <body className="min-h-full flex flex-col text-slate-900 antialiased font-sans selection:bg-indigo-500/20 selection:text-indigo-950 relative overflow-x-hidden">
+        {/* Dynamic Glassmorphism Mesh Gradient Canvas */}
+        <div className="glass-mesh-background bg-grid-overlay">
+          <div className="mesh-blob-1" />
+          <div className="mesh-blob-2" />
+          <div className="mesh-blob-3" />
+          <div className="mesh-blob-4" />
         </div>
 
-        {/* App Content Layer */}
+        {/* Translucent App Content Wrapper */}
         <div className="relative z-10 flex-1 flex flex-col">
           {children}
         </div>
