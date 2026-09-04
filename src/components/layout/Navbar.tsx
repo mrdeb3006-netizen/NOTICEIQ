@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { BrandWordmark } from "../ui/BrandWordmark";
 import { Button } from "../ui/Button";
-import { Sparkles, Menu, X, ArrowRight, Layers, Compass, ShieldCheck } from "lucide-react";
+import { Menu, X, ArrowRight, Layers, Compass, ShieldCheck } from "lucide-react";
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -11,23 +12,8 @@ export const Navbar: React.FC = () => {
   return (
     <header className="sticky top-0 z-50 w-full backdrop-blur-2xl bg-[#090d16]/75 border-b border-white/[0.08] shadow-lg shadow-black/20 transition-all">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="flex items-center gap-2.5 focus:outline-none group"
-        >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25 border border-white/20 group-hover:scale-105 transition-transform">
-            <Sparkles className="w-4 h-4 fill-white/20" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-extrabold tracking-tight text-white leading-none">
-              Notice<span className="text-indigo-400">IQ</span>
-            </span>
-            <span className="text-[9px] font-semibold uppercase tracking-widest text-slate-400 leading-none mt-0.5">
-              Action Platform
-            </span>
-          </div>
-        </Link>
+        {/* Official Minimalist Cursor-Reactive Wordmark */}
+        <BrandWordmark size="md" />
 
         {/* Desktop Navigation Links with Dark Glass Pill */}
         <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-white/[0.04] backdrop-blur-md border border-white/[0.08] shadow-xs text-sm font-medium text-slate-300">
@@ -88,7 +74,7 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile dropdown menu with Dark Frosted Glass */}
+      {/* Mobile dropdown menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-white/[0.08] bg-[#090d16]/95 backdrop-blur-2xl px-4 py-5 space-y-3 shadow-2xl shadow-black animate-in slide-in-from-top-2 duration-200">
           <nav className="flex flex-col space-y-2 text-sm font-medium text-slate-200">

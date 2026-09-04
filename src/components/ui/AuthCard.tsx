@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowLeft, Sparkles } from "lucide-react";
+import { BrandWordmark } from "./BrandWordmark";
 
 export interface AuthCardProps {
   title: string;
@@ -43,7 +44,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
       <div className={`w-full ${maxWidthClasses[maxWidth]} relative z-10 space-y-6`}>
-        {/* Top Header / Brand & Back link */}
+        {/* Top Header / Brand Wordmark & Back link */}
         <div className="flex items-center justify-between px-1">
           <Link
             href={backHref}
@@ -53,17 +54,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
             <span>{backLabel}</span>
           </Link>
 
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.04] backdrop-blur-md border border-white/[0.08] shadow-xs group hover:bg-white/[0.08] transition-all"
-          >
-            <span className="w-5 h-5 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-[10px] font-bold shadow-xs">
-              N
-            </span>
-            <span className="text-xs font-bold tracking-tight text-white group-hover:text-indigo-400 transition-colors">
-              Notice<span className="text-indigo-400">IQ</span>
-            </span>
-          </Link>
+          <BrandWordmark size="sm" />
         </div>
 
         {/* Elevated Dark Frosted Glass Main Card */}
@@ -91,7 +82,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
             </h1>
 
             {subtitle && (
-              <p className="text-sm text-slate-400 max-w-sm mx-auto leading-relaxed">
+              <p className="text-sm text-slate-400 max-w-sm mx-auto leading-relaxed font-normal">
                 {subtitle}
               </p>
             )}
@@ -108,7 +99,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
           )}
         </div>
 
-        {/* Security / System status footer */}
+        {/* Security status footer */}
         <div className="flex items-center justify-center gap-2 text-center text-xs text-slate-400">
           <div className="px-3.5 py-1 rounded-full bg-white/[0.03] backdrop-blur-md border border-white/[0.07] shadow-xs flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
