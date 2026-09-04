@@ -194,4 +194,201 @@ export interface Notice {
   aiApprovedAt?: string;
 }
 
+// ============================================================================
+// STEP 11: INSTITUTION ANALYTICS & IMPACT DASHBOARD TYPES
+// ============================================================================
+
+export type AggregatedActionStatus =
+  | "NOT_STARTED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "OVERDUE"
+  | "BLOCKED";
+
+export interface NoticeAnalytics {
+  noticeId: string;
+  institutionId: string;
+  noticeTitle: string;
+  category: NoticeCategory;
+  publicationDate: string;
+  deadline?: string;
+  targetAudience: string;
+  targetDepartment?: string;
+  targetYear?: string;
+  targetSection?: string;
+  status: "published" | "draft" | "archived" | "scheduled";
+
+  // Audience & Reach
+  studentsTargeted: number;
+  studentsReached: number;
+  studentsRelevant: number;
+  studentsNotRelevant: number;
+  relevanceBreakdown: {
+    high: number;
+    medium: number;
+    low: number;
+    notRelevant: number;
+  };
+
+  // Actions Generated & Completion
+  actionsGenerated: number;
+  actionsCompleted: number;
+  actionsOverdue: number;
+  actionsBlocked: number;
+  actionsInProgress: number;
+  actionsNotStarted: number;
+
+  // Rates & Key Metrics
+  completionRate: number; // completed / generated * 100
+  overdueRate: number; // overdue / generated * 100
+  onTimeRate: number; // on-time / completed * 100
+  actionConversionRate: number; // students who completed >= 1 action / relevant students * 100
+  actionabilityScore: number; // NoticeIQ 0-100 index
+
+  // Action States & Breakdown
+  actionStates: {
+    completed: number;
+    inProgress: number;
+    notStarted: number;
+    overdue: number;
+    blocked: number;
+  };
+
+  // Deadline Outcome Breakdown
+  deadlineOutcomes: {
+    beforeDeadline: number;
+    onDeadline: number;
+    afterDeadline: number;
+    overdue: number;
+    upcoming: number;
+  };
+
+  updatedAt: string;
+}
+
+export interface CommunicationFunnelMetrics {
+  publishedCount: number;
+  deliveredCount: number;
+  relevantCount: number;
+  actionGeneratedCount: number;
+  completedCount: number;
+
+  publishedPct: number; // 100%
+  deliveredPct: number;
+  relevantPct: number;
+  actionGeneratedPct: number;
+  completedPct: number;
+}
+
+export interface DepartmentPerformance {
+  department: string;
+  notices: number;
+  students: number;
+  actions: number;
+  completed: number;
+  completionRate: number;
+  overdue: number;
+}
+
+export interface YearClassPerformance {
+  yearClass: string;
+  notices: number;
+  students: number;
+  actions: number;
+  completed: number;
+  completionRate: number;
+  overdue: number;
+}
+
+export interface SectionPerformance {
+  section: string;
+  notices: number;
+  students: number;
+  actions: number;
+  completed: number;
+  completionRate: number;
+  overdue: number;
+}
+
+export interface CategoryPerformance {
+  category: NoticeCategory;
+  notices: number;
+  studentsReached: number;
+  actionsGenerated: number;
+  completed: number;
+  completionRate: number;
+  overdue: number;
+}
+
+export interface DeadlineEffectiveness {
+  beforeDeadlinePct: number;
+  onDeadlinePct: number;
+  afterDeadlinePct: number;
+  overduePct: number;
+}
+
+export interface InstitutionInsightItem {
+  id: string;
+  type: "positive" | "warning" | "targeting" | "impact";
+  title: string;
+  message: string;
+  badge: string;
+}
+
+export interface InstitutionAnalyticsSummary {
+  institutionId: string;
+  totalNotices: number;
+  studentsReached: number;
+  relevantNoticesCount: number;
+  actionsGenerated: number;
+  actionsCompleted: number;
+  actionsOverdue: number;
+
+  overallCompletionRate: number;
+  overallOverdueRate: number;
+  actionConversionRate: number;
+  averageActionabilityScore: number;
+
+  funnel: CommunicationFunnelMetrics;
+  relevanceDistribution: {
+    high: number;
+    medium: number;
+    low: number;
+    notRelevant: number;
+    highPct: number;
+    mediumPct: number;
+    lowPct: number;
+    notRelevantPct: number;
+  };
+
+  departmentPerformance: DepartmentPerformance[];
+  yearClassPerformance: YearClassPerformance[];
+  sectionPerformance: SectionPerformance[];
+  categoryPerformance: CategoryPerformance[];
+  deadlineEffectiveness: DeadlineEffectiveness;
+
+  insights: InstitutionInsightItem[];
+  noticeAnalyticsList: NoticeAnalytics[];
+}
+
+export type DateRangePreset =
+  | "today"
+  | "7days"
+  | "30days"
+  | "90days"
+  | "all"
+  | "custom";
+
+export interface AnalyticsFilterOptions {
+  dateRange: DateRangePreset;
+  startDate?: string;
+  endDate?: string;
+  department?: string;
+  yearClass?: string;
+  section?: string;
+  category?: string;
+  status?: string;
+  searchQuery?: string;
+}
+
 

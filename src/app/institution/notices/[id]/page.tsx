@@ -31,6 +31,7 @@ import {
   CheckSquare,
   ChevronDown,
   ChevronUp,
+  BarChart3,
 } from "lucide-react";
 import { useInstitutionData } from "@/lib/institutionStore";
 import { NoticeAiAnalysis, NoticeAiTask } from "@/types/institution";
@@ -253,7 +254,15 @@ export default function NoticeDetailsPage({
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+          <Link
+            href={`/institution/notices/${notice.id}/analytics`}
+            className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center gap-1.5 transition-colors border border-indigo-200/60"
+          >
+            <BarChart3 className="w-3.5 h-3.5" />
+            <span>View Analytics</span>
+          </Link>
+
           {!isArchived && (
             <button
               type="button"
