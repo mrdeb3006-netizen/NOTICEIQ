@@ -9,6 +9,11 @@ export interface RoleCardProps {
   tagline: string;
   description: string;
   href: string;
+  buttonLabel?: string;
+  secondaryAction?: {
+    label: string;
+    href: string;
+  };
   features: string[];
   popular?: boolean;
 }
@@ -20,6 +25,8 @@ export const RoleCard: React.FC<RoleCardProps> = ({
   tagline,
   description,
   href,
+  buttonLabel = "Login",
+  secondaryAction,
   features,
   popular,
 }) => {
@@ -72,8 +79,8 @@ export const RoleCard: React.FC<RoleCardProps> = ({
         </div>
       </div>
 
-      {/* Action button */}
-      <div className="pt-6 mt-6 border-t border-white/[0.06]">
+      {/* Action buttons */}
+      <div className="pt-6 mt-6 border-t border-white/[0.06] space-y-2.5">
         <Button
           href={href}
           variant={popular ? "primary" : "secondary"}
@@ -81,8 +88,19 @@ export const RoleCard: React.FC<RoleCardProps> = ({
           className="w-full justify-center group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-colors shadow-xs"
           rightIcon={<ArrowRight className="w-4 h-4" />}
         >
-          Continue
+          {buttonLabel}
         </Button>
+
+        {secondaryAction && (
+          <Button
+            href={secondaryAction.href}
+            variant="ghost"
+            size="sm"
+            className="w-full justify-center text-xs text-slate-400 hover:text-indigo-300"
+          >
+            {secondaryAction.label} →
+          </Button>
+        )}
       </div>
     </div>
   );

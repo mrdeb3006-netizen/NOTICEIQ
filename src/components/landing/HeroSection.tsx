@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { Button } from "../ui/Button";
 import {
   ArrowRight,
@@ -6,7 +7,9 @@ import {
   CheckCircle2,
   Calendar,
   Clock,
-  Layers,
+  GraduationCap,
+  Building2,
+  BookOpen,
 } from "lucide-react";
 
 export const HeroSection: React.FC = () => {
@@ -39,26 +42,39 @@ export const HeroSection: React.FC = () => {
           AI-powered action management for students, schools and colleges.
         </p>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-md mx-auto mb-16">
+        {/* Direct Authentication Action Keys */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 max-w-lg mx-auto mb-6">
           <Button
-            href="/get-started"
+            href="/auth/student"
             variant="primary"
             size="lg"
-            className="w-full sm:w-auto px-8 shadow-xl shadow-indigo-500/25"
+            className="w-full sm:w-auto px-7 shadow-xl shadow-indigo-500/25"
+            leftIcon={<GraduationCap className="w-5 h-5" />}
             rightIcon={<ArrowRight className="w-4 h-4" />}
           >
-            Get Started
+            Student Login
           </Button>
           <Button
-            href="#how-it-works"
+            href="/auth/institution"
             variant="secondary"
             size="lg"
-            className="w-full sm:w-auto px-7"
-            leftIcon={<Layers className="w-4 h-4 text-slate-400" />}
+            className="w-full sm:w-auto px-6"
+            leftIcon={<Building2 className="w-4 h-4 text-slate-400" />}
           >
-            See How It Works
+            Institution Portal
           </Button>
+        </div>
+
+        {/* Faculty quick access link */}
+        <div className="mb-16 flex items-center justify-center gap-4 text-xs text-slate-400">
+          <span>Are you a faculty member?</span>
+          <Link
+            href="/auth/faculty"
+            className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Faculty Login →</span>
+          </Link>
         </div>
 
         {/* Minimalist Dark Glass Preview Board */}
@@ -81,7 +97,7 @@ export const HeroSection: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-            {/* Left: Raw Notice Simulation Dark Glass Panel */}
+            {/* Left: Raw Notice Simulation */}
             <div className="p-4 rounded-2xl bg-white/[0.03] backdrop-blur-md border border-white/[0.06] space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
@@ -97,7 +113,7 @@ export const HeroSection: React.FC = () => {
               </div>
             </div>
 
-            {/* Right: Personalized Action Items Generated Dark Glass Panel */}
+            {/* Right: Personalized Action Items Generated */}
             <div className="p-4 rounded-2xl bg-indigo-500/[0.08] backdrop-blur-md border border-indigo-500/20 space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1">

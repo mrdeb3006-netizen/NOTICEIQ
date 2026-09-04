@@ -49,8 +49,8 @@ export default function FacultyLoginPage() {
         icon: <BookOpen className="w-3.5 h-3.5 text-indigo-400" />,
         colorScheme: "indigo",
       }}
-      backHref="/get-started"
-      backLabel="Change Role"
+      backHref="/"
+      backLabel="Back to Home"
       footer={
         <div className="space-y-1">
           <p>

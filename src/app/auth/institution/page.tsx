@@ -51,8 +51,8 @@ export default function InstitutionLoginPage() {
         icon: <Building2 className="w-3.5 h-3.5 text-indigo-400" />,
         colorScheme: "indigo",
       }}
-      backHref="/get-started"
-      backLabel="Change Role"
+      backHref="/"
+      backLabel="Back to Home"
       footer={
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
           <span className="text-slate-400">Need to register a new school or campus?</span>
