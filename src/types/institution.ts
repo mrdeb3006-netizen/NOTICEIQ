@@ -75,6 +75,64 @@ export type NoticeTargetType =
   | "group"
   | "selected";
 
+export type NoticeAiAnalysisStatus =
+  | "NOT_ANALYZED"
+  | "ANALYZING"
+  | "ANALYZED"
+  | "APPROVED"
+  | "FAILED";
+
+export interface NoticeAiAudience {
+  departments: string[];
+  years: string[];
+  classes: string[];
+  sections: string[];
+}
+
+export interface NoticeAiDates {
+  publication_date: string | null;
+  deadline: string | null;
+  event_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+}
+
+export interface NoticeAiTask {
+  id?: string;
+  title: string;
+  description?: string;
+  deadline?: string | null;
+  estimated_minutes?: number | null;
+}
+
+export interface NoticeAiDependency {
+  blocked_task: string;
+  required_task: string;
+}
+
+export interface NoticeAiAnalysis {
+  summary: string;
+  notice_type:
+    | "ACADEMIC"
+    | "EXAMINATION"
+    | "SCHOLARSHIP"
+    | "ASSIGNMENT"
+    | "EVENT"
+    | "ADMINISTRATION"
+    | "PLACEMENT"
+    | "CLUB_ACTIVITY"
+    | "GENERAL";
+  audience: NoticeAiAudience;
+  dates: NoticeAiDates;
+  requirements: string[];
+  documents_required: string[];
+  tasks: NoticeAiTask[];
+  consequences: string[];
+  dependencies: NoticeAiDependency[];
+  important_points: string[];
+  confidence: number;
+}
+
 export interface Notice {
   id: string;
   institutionId: string;
@@ -117,18 +175,22 @@ export interface Notice {
   createdAt: string;
   publishedAt?: string;
 
-  // Future AI Analysis Stubs (Prepared for Step 5)
+  // AI Notice Understanding Engine Fields (Step 5)
+  aiAnalysisStatus?: NoticeAiAnalysisStatus;
+  aiAnalysis?: NoticeAiAnalysis;
   aiSummary?: string;
-  aiDetectedDeadline?: string;
-  aiDetectedAudience?: string;
-  aiDetectedTasks?: Array<{
-    id: string;
-    title: string;
-    dueDate?: string;
-    priority?: "low" | "medium" | "high" | "critical";
-  }>;
-  aiDetectedRequirements?: string[];
-  aiDetectedConsequences?: string;
+  aiNoticeType?: string;
+  aiAudience?: NoticeAiAudience;
+  aiDates?: NoticeAiDates;
+  aiRequirements?: string[];
+  aiDocuments?: string[];
+  aiTasks?: NoticeAiTask[];
+  aiConsequences?: string[];
+  aiDependencies?: NoticeAiDependency[];
+  aiImportantPoints?: string[];
   aiConfidence?: number;
+  aiAnalyzedAt?: string;
+  aiApprovedAt?: string;
 }
+
 

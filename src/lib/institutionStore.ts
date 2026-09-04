@@ -7,6 +7,8 @@ import {
   Faculty,
   Group,
   Notice,
+  NoticeAiAnalysis,
+  NoticeAiAnalysisStatus,
   InstitutionType,
 } from "@/types/institution";
 import {
@@ -213,6 +215,52 @@ export function useInstitutionData() {
     });
   };
 
+  const updateNoticeAiAnalysis = (
+    noticeId: string,
+    analysis: NoticeAiAnalysis,
+    status: NoticeAiAnalysisStatus = "ANALYZED"
+  ) => {
+    setNotices((prev) => {
+      const next = prev.map((n) => {
+        if (n.id !== noticeId) return n;
+        return {
+          ...n,
+          aiAnalysisStatus: status,
+          aiAnalysis: analysis,
+          aiSummary: analysis.summary,
+          aiNoticeType: analysis.notice_type,
+          aiAudience: analysis.audience,
+          aiDates: analysis.dates,
+          aiRequirements: analysis.requirements,
+          aiDocuments: analysis.documents_required,
+          aiTasks: analysis.tasks,
+          aiConsequences: analysis.consequences,
+          aiDependencies: analysis.dependencies,
+          aiImportantPoints: analysis.important_points,
+          aiConfidence: analysis.confidence,
+          aiAnalyzedAt: new Date().toISOString(),
+        };
+      });
+      setStoredItem(STORAGE_KEYS.NOTICES, next);
+      return next;
+    });
+  };
+
+  const approveNoticeAiAnalysis = (noticeId: string) => {
+    setNotices((prev) => {
+      const next = prev.map((n) => {
+        if (n.id !== noticeId) return n;
+        return {
+          ...n,
+          aiAnalysisStatus: "APPROVED" as const,
+          aiApprovedAt: new Date().toISOString(),
+        };
+      });
+      setStoredItem(STORAGE_KEYS.NOTICES, next);
+      return next;
+    });
+  };
+
   return {
     institution,
     students,
@@ -228,6 +276,9 @@ export function useInstitutionData() {
     publishNotice,
     saveDraftNotice,
     archiveNotice,
+    updateNoticeAiAnalysis,
+    approveNoticeAiAnalysis,
   };
 }
+
 

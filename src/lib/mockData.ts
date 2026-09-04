@@ -278,6 +278,73 @@ For assistance, contact the Student Welfare Office.`,
     attachmentName: "Scholarship_Guidelines_2026.pdf",
     attachmentType: "pdf",
     attachmentSize: "1.4 MB",
+    aiAnalysisStatus: "ANALYZED",
+    aiConfidence: 0.96,
+    aiSummary: "Eligible first-year students must complete their scholarship application by September 10, 2026 and submit the required documents.",
+    aiNoticeType: "SCHOLARSHIP",
+    aiAnalysis: {
+      summary: "Eligible first-year students must complete their scholarship application by September 10, 2026 and submit the required documents.",
+      notice_type: "SCHOLARSHIP",
+      audience: {
+        departments: ["CSE"],
+        years: ["1st Year"],
+        classes: [],
+        sections: ["A"],
+      },
+      dates: {
+        publication_date: "2026-09-02",
+        deadline: "2026-09-10",
+        event_date: "2026-09-10",
+        start_time: "10:00",
+        end_time: "16:00",
+      },
+      requirements: [
+        "Must be an eligible first-year student",
+        "Complete and submit scholarship application before September 10, 2026",
+      ],
+      documents_required: [
+        "Aadhaar Card",
+        "Previous Semester Marksheet",
+        "Income Certificate",
+        "Bank Account Details",
+      ],
+      tasks: [
+        {
+          title: "Collect required documents",
+          description: "Assemble Aadhaar Card, Marksheet, and Bank details.",
+          deadline: "2026-09-08",
+          estimated_minutes: 45,
+        },
+        {
+          title: "Obtain income certificate",
+          description: "Collect verified annual income certificate from competent authority.",
+          deadline: "2026-09-07",
+          estimated_minutes: 60,
+        },
+        {
+          title: "Complete scholarship application",
+          description: "Submit all verified documents and application form to the Student Welfare Office.",
+          deadline: "2026-09-10",
+          estimated_minutes: 30,
+        },
+      ],
+      consequences: [
+        "May not be considered for the scholarship if the application is not submitted before the deadline.",
+      ],
+      dependencies: [
+        {
+          blocked_task: "Complete scholarship application",
+          required_task: "Obtain income certificate",
+        },
+      ],
+      important_points: [
+        "Applicable exclusively to eligible first-year students",
+        "Strict action deadline is September 10, 2026",
+        "Income certificate and academic marksheets are mandatory",
+        "Assistance is available at the Student Welfare Office (Admin Block Room 104)",
+      ],
+      confidence: 0.96,
+    },
   },
   {
     id: "not-002",
