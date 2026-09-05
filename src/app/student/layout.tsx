@@ -31,10 +31,10 @@ export default function StudentRootLayout({
       {mobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
           />
-          <div className="relative w-72 max-w-[80vw] bg-white h-full shadow-2xl z-50 animate-in slide-in-from-left duration-200">
+          <div className="relative w-72 max-w-[80vw] bg-slate-950 h-full shadow-2xl z-50 animate-in slide-in-from-left duration-200 border-r border-slate-800">
             <StudentSidebar onCloseMobile={() => setMobileMenuOpen(false)} />
           </div>
         </div>
