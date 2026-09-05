@@ -38,55 +38,29 @@ export const StudentSidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
       activeOnRoot: true,
     },
     {
-      label: "Inbox",
-      href: "/student/inbox",
-      icon: <Inbox className="w-4 h-4" />,
+      label: "Notices",
+      href: "/student/notices",
+      icon: <FileText className="w-4 h-4" />,
     },
     {
-      label: "My Actions",
-      href: "/student/actions",
+      label: "My Work",
+      href: "/student/work",
       icon: <Zap className="w-4 h-4" />,
-    },
-    {
-      label: "Priority Matrix",
-      href: "/student/priority",
-      icon: <Target className="w-4 h-4" />,
-      badge: "Q1–Q4",
     },
     {
       label: "Schedule",
       href: "/student/schedule",
       icon: <Calendar className="w-4 h-4" />,
-      badge: "Smart",
-    },
-    {
-      label: "Notifications",
-      href: "/student/notifications",
-      icon: <Bell className="w-4 h-4" />,
-      badge: unreadCount > 0 ? `${unreadCount}` : undefined,
-    },
-    {
-      label: "Notices",
-      href: "/student/notices",
-      icon: <FileText className="w-4 h-4" />,
-      comingSoon: true,
     },
     {
       label: "Insights",
       href: "/student/insights",
       icon: <BarChart2 className="w-4 h-4" />,
-      comingSoon: true,
     },
     {
       label: "Profile",
       href: "/student/profile",
       icon: <User className="w-4 h-4" />,
-      activeOnRoot: false,
-    },
-    {
-      label: "Settings",
-      href: "/student/settings",
-      icon: <Settings className="w-4 h-4" />,
       activeOnRoot: false,
     },
   ];
@@ -165,30 +139,6 @@ export const StudentSidebar: React.FC<SidebarProps> = ({ onCloseMobile }) => {
                   </span>
                   <span>{item.label}</span>
                 </div>
-
-                {item.badge && (
-                  <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded font-extrabold uppercase tracking-wider ${
-                      isActive
-                        ? "bg-indigo-700/80 text-white"
-                        : "bg-indigo-50 text-indigo-700 border border-indigo-200/60"
-                    }`}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-
-                {item.comingSoon && (
-                  <span
-                    className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider ${
-                      isActive
-                        ? "bg-indigo-700/60 text-white"
-                        : "bg-slate-100 text-slate-400"
-                    }`}
-                  >
-                    Soon
-                  </span>
-                )}
               </Link>
             );
           })}
