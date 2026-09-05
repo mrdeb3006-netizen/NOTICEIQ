@@ -51,7 +51,7 @@ export const Navbar: React.FC = () => {
         {/* Direct Authentication Actions */}
         <div className="hidden md:flex items-center gap-2">
           <Link
-            href="/auth/faculty"
+            href="/faculty/login"
             className="text-xs font-semibold text-slate-400 hover:text-white px-2.5 py-1.5 transition-colors"
           >
             Faculty
@@ -147,7 +147,7 @@ export const Navbar: React.FC = () => {
                 Institution
               </Button>
               <Button
-                href="/auth/faculty"
+                href="/faculty/login"
                 variant="secondary"
                 size="sm"
                 className="w-full justify-center text-xs"

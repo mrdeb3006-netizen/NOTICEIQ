@@ -27,7 +27,7 @@ export default function FacultyLoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   const handleDirectFacultyAccess = () => {
-    router.push("/institution/faculty");
+    router.push("/faculty/dashboard");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -42,7 +42,7 @@ export default function FacultyLoginPage() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      router.push("/institution/faculty");
+      router.push("/faculty/dashboard");
     }, 400);
   };
 

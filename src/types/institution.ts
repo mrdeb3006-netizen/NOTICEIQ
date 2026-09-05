@@ -172,6 +172,10 @@ export interface Notice {
   // Lifecycle
   status: "published" | "draft" | "archived" | "scheduled";
   createdBy?: string;
+  source?: "INSTITUTION" | "HOD" | "FACULTY";
+  authorName?: string;
+  authorRole?: string;
+  authorDepartment?: string;
   createdAt: string;
   publishedAt?: string;
   updatedAt?: string;

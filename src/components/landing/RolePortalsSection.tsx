@@ -45,7 +45,7 @@ export const RolePortalsSection: React.FC = () => {
       emoji: "👨‍🏫",
       tagline: "Professors & Teachers",
       description: "Create and publish course circulars, assignments, and deadlines.",
-      href: "/auth/faculty",
+      href: "/faculty/login",
       buttonLabel: "Faculty Login",
       features: [
         "Course & lab announcement creator",
